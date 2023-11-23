@@ -243,7 +243,6 @@ class AsmGen_x64_Linux(AsmGen):
                     emitter._get_asm('movq', '%rsp', '%rbp'),
                     emitter._get_asm('subq', f'${8*nvars}', '%rsp'),
                 ] + emitter._asm + [
-                    emitter._get_asm('movq', '$0', '%rax'),
                     emitter._get_label(emitter._endlbl),
                     emitter._get_asm('movq', '%rbp', '%rsp'),
                     emitter._get_asm('popq', '%rbp'),

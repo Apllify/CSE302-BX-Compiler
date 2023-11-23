@@ -82,6 +82,10 @@ class MM:
                             self._scope.push(argument[0].value, f'%{argument[0].value}')
 
                         self.for_statement(body)
+
+                        if name.value == 'main':
+                            self.for_statement(ReturnStatement(IntExpression(0)));
+
                         self._tac.append(self._proc)
                         self._proc = None
 
