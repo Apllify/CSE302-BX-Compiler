@@ -13,6 +13,11 @@ from .bxtac   import *
 class MM:
     _counter = -1
 
+    PRINTS = {
+        Type.INT  : 'print_int',
+        Type.BOOL : 'print_bool',
+    }
+
     def __init__(self):
         self._proc    = None
         self._tac     = []
@@ -184,6 +189,12 @@ class MM:
                     if expr.type_ != Type.VOID:
                         target = self.fresh_temporary()
                     self.push('call', proc.value, len(arguments), result = target)
+
+                case PrintExpression(argument):
+                    temp = self.for_expression(argument)
+                    self.push('param', 1, temp)
+                    proc = self.PRINTS[argument.type_]
+                    self.push('call', proc, 1)
 
                 case _:
                     assert(False)
