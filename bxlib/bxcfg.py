@@ -52,10 +52,13 @@ def tac2cfg(tac : list[str | TAC]):
             if itac.opcode in ('jz', 'jnz', 'jgt', 'jge', 'jlt', 'jle'):
                 blocks[-1].cjumps.append((itac.opcode, itac.arguments))
 
-    if blocks:
-        if blocks[-1].jump is None:
-            blocks[-1].jump = False
-            blocks[-1].body.append(TAC('ret', []))
+    if not blocks:
+        blocks.append(CFGNode())
+        blocks.label = MM.fresh_label()
+
+    if blocks[-1].jump is None:
+        blocks[-1].jump = False
+        blocks[-1].body.append(TAC('ret', []))
 
     return CFG(blocks[0].label, { b.label: b for b in blocks })
 

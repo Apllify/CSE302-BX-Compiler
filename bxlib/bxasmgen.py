@@ -8,17 +8,24 @@ class AsmGen(abc.ABC):
     BACKENDS   = {}
 
     def __init__(self):
-        self._temps = dict()
-        self._asm   = []
+        self._tparams = dict()
+        self._temps   = dict()
+        self._asm     = []
 
     def _temp(self, temp):
         if temp.startswith('@'):
             return self._format_temp(temp[1:])
+        if temp in self._tparams:
+            return self._format_param(self._tparams[temp])
         index = self._temps.setdefault(temp, len(self._temps))
         return self._format_temp(index)
 
     @abc.abstractmethod
     def _format_temp(self, index):
+        pass
+
+    @abc.abstractmethod
+    def _format_param(self, index):
         pass
 
     def __call__(self, instr: TAC | str):
@@ -65,6 +72,9 @@ class AsmGen_x64_Linux(AsmGen):
         if isinstance(index, str):
             return f'{index}(%rip)'
         return f'-{8*(index+1)}(%rbp)'
+
+    def _format_param(self, index):
+        return f'{8*(index+2)}(%rbp)'
 
     def _emit_const(self, ctt, dst):
         self._emit('movq', f'${ctt}', self._temp(dst))
@@ -174,13 +184,13 @@ class AsmGen_x64_Linux(AsmGen):
         for i, x in enumerate(self._params[:6]):
             self._emit('movq', self._temp(x), self.PARAMS[i])
 
-        for x in self._params[6:][::-1]:
-            self._emit('pushq', self._temp(x))
-
         qarg = 0 if arg <= 6 else arg - 6
 
         if qarg & 0x1:
             self._emit('subq', '$8', '%rsp')
+
+        for x in self._params[6:][::-1]:
+            self._emit('pushq', self._temp(x))
 
         self._emit('callq', lbl)
 
@@ -216,6 +226,9 @@ class AsmGen_x64_Linux(AsmGen):
                 for i in range(min(6, len(arguments))):
                     emitter._emit('movq', emitter.PARAMS[i], emitter._temp(arguments[i]))
 
+                for i, arg in enumerate(arguments[6:]):
+                    emitter._tparams[arg] = i
+
                 for instr in ptac:
                     emitter(instr)
 
@@ -230,7 +243,6 @@ class AsmGen_x64_Linux(AsmGen):
                     emitter._get_asm('movq', '%rsp', '%rbp'),
                     emitter._get_asm('subq', f'${8*nvars}', '%rsp'),
                 ] + emitter._asm + [
-                    emitter._get_asm('movq', '$0', '%rax'),
                     emitter._get_label(emitter._endlbl),
                     emitter._get_asm('movq', '%rbp', '%rsp'),
                     emitter._get_asm('popq', '%rbp'),

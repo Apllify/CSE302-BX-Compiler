@@ -13,6 +13,11 @@ from .bxtac   import *
 class MM:
     _counter = -1
 
+    PRINTS = {
+        BasicType.INT  : 'print_int',
+        BasicType.BOOL : 'print_bool',
+    }
+
     def __init__(self):
         self._proc    = None
         self._tac     = []
@@ -77,6 +82,10 @@ class MM:
                             self._scope.push(argument[0].value, f'%{argument[0].value}')
 
                         self.for_statement(body)
+
+                        if name.value == 'main':
+                            self.for_statement(ReturnStatement(IntExpression(0)));
+
                         self._tac.append(self._proc)
                         self._proc = None
 
@@ -152,7 +161,7 @@ class MM:
     def for_expression(self, expr: Expression, force = False) -> str:
         target = None
 
-        if not force and expr.type_ == Type.BOOL:
+        if not force and expr.type_ == BasicType.BOOL:
             target = self.fresh_temporary()
             tlabel = self.fresh_label()
             flabel = self.fresh_label()
@@ -181,9 +190,15 @@ class MM:
                     for i, argument in enumerate(arguments):
                         temp = self.for_expression(argument)
                         self.push('param', i+1, temp)
-                    if expr.type_ != Type.VOID:
+                    if expr.type_ != BasicType.VOID:
                         target = self.fresh_temporary()
                     self.push('call', proc.value, len(arguments), result = target)
+
+                case PrintExpression(argument):
+                    temp = self.for_expression(argument)
+                    self.push('param', 1, temp)
+                    proc = self.PRINTS[argument.type_]
+                    self.push('call', proc, 1)
 
                 case _:
                     assert(False)
@@ -200,7 +215,7 @@ class MM:
     }
 
     def for_bexpression(self, expr: Expression, tlabel: str, flabel: str):
-        assert(expr.type_ == Type.BOOL)
+        assert(expr.type_ == BasicType.BOOL)
 
         match expr:
             case VarExpression(name):
