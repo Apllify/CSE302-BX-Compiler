@@ -31,7 +31,7 @@ class PreTyper:
 
                     procs[name.value] = (
                         tuple(x[1] for x in arguments),
-                        Type.VOID if rettype is None else rettype
+                        BasicType.VOID if rettype is None else rettype
                     )
 
                 case GlobVarDecl(name, init, type_):
@@ -49,7 +49,7 @@ class PreTyper:
 
         if 'main' not in procs:
             self.reporter('this program is missing a main subroutine')
-        elif procs['main'] != ((), Type.VOID):
+        elif procs['main'] != ((), BasicType.VOID):
             self.reporter(
                 '"main" should not take any argument and should not return any value'
             )
@@ -58,8 +58,8 @@ class PreTyper:
 
 # --------------------------------------------------------------------
 class TypeChecker:
-    B : Type = Type.BOOL
-    I : Type = Type.INT
+    B : Type = BasicType.BOOL
+    I : Type = BasicType.INT
 
     SIGS = {
         'opposite'                 : ([I   ], I),
@@ -149,7 +149,7 @@ class TypeChecker:
 
             case IntExpression(value):
                 self.check_integer_constant_range(value)
-                type_ = Type.INT
+                type_ = BasicType.INT
 
             case OpAppExpression(opname, arguments):
                 opsig = self.SIGS[opname]
@@ -183,13 +183,13 @@ class TypeChecker:
                 self.for_expression(e);
 
                 if e.type_ is not None:
-                    if e.type_ not in (Type.INT, Type.BOOL):
+                    if e.type_ not in (BasicType.INT, BasicType.BOOL):
                         self.report(
                             f'can only print integers and booleans, not {e.type_}',
                             position = e.position,
                         )
 
-                type_ = Type.VOID
+                type_ = BasicType.VOID
 
             case _:
                 print(expr)
@@ -223,13 +223,13 @@ class TypeChecker:
                 self.for_block(block)
 
             case IfStatement(condition, iftrue, iffalse):
-                self.for_expression(condition, etype = Type.BOOL)
+                self.for_expression(condition, etype = BasicType.BOOL)
                 self.for_statement(iftrue)
                 if iffalse is not None:
                     self.for_statement(iffalse)
 
             case WhileStatement(condition, body):
-                self.for_expression(condition, etype = Type.BOOL)
+                self.for_expression(condition, etype = BasicType.BOOL)
                 with self.in_loop():
                     self.for_statement(body)
 

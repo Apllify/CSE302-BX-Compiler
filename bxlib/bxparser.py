@@ -86,11 +86,15 @@ class Parser:
 
     def p_type_bool(self, p):
         """type : BOOL"""
-        p[0] = Type.BOOL
+        p[0] = BasicType.BOOL
 
     def p_type_int(self, p):
         """type : INT"""
-        p[0] = Type.INT
+        p[0] = BasicType.INT
+        
+    def p_type_pointer(self, p):
+        """type : type STAR"""
+        p[0] = PointerType
 
     def p_expression_var(self, p):
         """expr : name"""

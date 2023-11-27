@@ -8,7 +8,11 @@ from typing import Optional as Opt
 # Parse tree / Abstract Syntax Tree
 
 # --------------------------------------------------------------------
-class Type(enum.Enum):
+class Type():
+    pass
+
+
+class BasicType(Type, enum.Enum):
     VOID = 0
     BOOL = 1
     INT  = 2
@@ -21,6 +25,20 @@ class Type(enum.Enum):
                 return 'int'
             case self.BOOL:
                 return 'bool'
+
+
+class PointerType(Type):
+    target: Type
+    
+    def __str__(self):
+        return f"{self.target}*"
+
+class TupleType(Type):
+    target: Type
+    size: int
+    
+    def __str__(self):
+        return f"{self.target}, {self.size}"
 
 # --------------------------------------------------------------------
 @dc.dataclass
