@@ -145,7 +145,7 @@ class TypeChecker:
                     type_ = self.scope[name.value]
 
             case BoolExpression(_):
-                type_ = Type.BOOL
+                type_ = BasicType.BOOL
 
             case IntExpression(value):
                 self.check_integer_constant_range(value)
@@ -241,7 +241,7 @@ class TypeChecker:
                     )
 
             case PrintStatement(init):
-                self.for_expression(init, etype = Type.INT)
+                self.for_expression(init, etype = BasicType.INT)
 
             case ReturnStatement(e):
                 if e is None:
