@@ -1,0 +1,32 @@
+<program> ::= <decl>*
+
+<decl> ::= <vardecl> | <procdecl>
+
+<ty> ::= "int" | "bool"
+
+<procdecl> ::= "def" IDENT "(" (<param> ("," <param>)*)? ")" (":" <ty>)? <block>
+<param> ::= IDENT ("," IDENT)* ":" <ty>
+
+<stmt> ::= <vardecl> | <block> | <assign> | <eval> | <ifelse> | <while> | <jump> | <return>
+
+<vardecl> ::= <varinits> ":" <ty> ";"
+<varinits> ::= IDENT "=" <expr> ("," IDENT "=" <expr>)*
+
+<assign> ::= IDENT "=" <expr> ";"
+<eval> ::= <expr> ";"
+<ifelse> ::= "if" "(" <expr> ")" <block> <ifrest>
+<ifrest> ::= e | "else" <ifelse> | "else" <block>
+<while> ::= "while" "(" <expr> ")" <block>
+<jump> ::= "break" ";" | "continue" ";"
+<return> ::= "return"? <expr> ";"
+<block> ::= "{" <stmts> "}"
+<expr> ::= IDENT | NUMBER | "true" | "false" | "(" <expr> ")"
+           | <expr> <binop> <expr> | <unop> <expr>
+           | IDENT "("(<expr> ("," <expr>)*)? ")"
+
+<binop> ::= "+" | "-" | "*" | "/" | "%" | "&" | "|" | "^" | "<<" | ">>"
+            | "==" | "!=" | "<" | "<=" | ">" | ">=" | "&&" | "||"
+<unop> ::= "-" | "~" | "!"
+
+IDENT ::~ /[A-Za-z][A-Za-z0-9_]*/
+NUMBER ::~ /0|-?[1-9][0-9]*/
