@@ -163,13 +163,13 @@ class AsmGen_x64_Linux(AsmGen):
         self._emit_cjmp('jnz', op, lbl)
 
     def _emit_jlt(self, op, lbl):
-        self._emit_cjmp('jlt', op, lbl)
+        self._emit_cjmp('jl', op, lbl)
 
     def _emit_jle(self, op, lbl):
         self._emit_cjmp('jle', op, lbl)
 
     def _emit_jgt(self, op, lbl):
-        self._emit_cjmp('jgt', op, lbl)
+        self._emit_cjmp('jg', op, lbl)
 
     def _emit_jge(self, op, lbl):
         self._emit_cjmp('jge', op, lbl)
