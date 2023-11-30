@@ -26,19 +26,20 @@ class BasicType(Type, enum.Enum):
             case self.BOOL:
                 return 'bool'
 
-
+@dc.dataclass
 class PointerType(Type):
     target: Type
     
     def __str__(self):
         return f"{self.target}*"
 
-class TupleType(Type):
+@dc.dataclass
+class ArrayType(Type):
     target: Type
     size: int
     
     def __str__(self):
-        return f"{self.target}, {self.size}"
+        return f"{self.target}[{self.size}]"
 
 # --------------------------------------------------------------------
 @dc.dataclass
@@ -82,6 +83,11 @@ class IntExpression(Expression):
 
 # --------------------------------------------------------------------
 @dc.dataclass
+class NullExpression(Expression):
+    pass
+
+# --------------------------------------------------------------------
+@dc.dataclass
 class OpAppExpression(Expression):
     operator: str
     arguments: list[Expression]
@@ -96,6 +102,28 @@ class CallExpression(Expression):
 @dc.dataclass
 class PrintExpression(Expression):
     argument: Expression
+
+# --------------------------------------------------------------------
+class Assignable(Expression):
+    pass
+
+# --------------------------------------------------------------------
+@dc.dataclass
+class VarAssignable(Assignable):
+    name : str
+
+# --------------------------------------------------------------------
+@dc.dataclass
+class PointerAssignable(Assignable):
+    name : str
+
+
+# --------------------------------------------------------------------
+@dc.dataclass
+class ArrayAssignable(Assignable):
+    name : str
+    index : int
+
 
 # --------------------------------------------------------------------
 class Statement(AST):
@@ -123,6 +151,12 @@ class ExprStatement(Statement):
 @dc.dataclass
 class PrintStatement(Statement):
     value: Expression
+
+# --------------------------------------------------------------------
+@dc.dataclass
+class AllocStatement(Statement):
+    alloctype : Type
+    size : Expression
 
 # --------------------------------------------------------------------
 @dc.dataclass

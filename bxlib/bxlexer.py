@@ -12,6 +12,7 @@ from .bxerrors import Reporter
 class Lexer:
     keywords = {
         x: x.upper() for x in (
+            'alloc'   ,
             'bool'    ,
             'break'   ,
             'continue',
@@ -20,12 +21,12 @@ class Lexer:
             'false'   ,
             'if'      ,
             'int'     ,
+            'null'    ,
             'print'   ,
             'return'  ,
             'true'    ,
             'var'     ,
             'while'   ,
-            'null'    ,
         )
     }
     
@@ -38,6 +39,8 @@ class Lexer:
         'RPAREN'   ,
         'LBRACE'   ,
         'RBRACE'   ,
+        'LSQUARE',
+        'RSQUARE',
         'COLON'    ,
         'SEMICOLON',
         'COMMA'    ,
