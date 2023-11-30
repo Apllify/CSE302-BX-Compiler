@@ -84,6 +84,7 @@ class Parser:
             position = self._position(p)
         )
 
+
     def p_type_bool(self, p):
         """type : BOOL"""
         p[0] = BasicType.BOOL
@@ -94,7 +95,18 @@ class Parser:
         
     def p_type_pointer(self, p):
         """type : type STAR"""
-        p[0] = PointerType
+        p[0] = PointerType(
+            target = p[1]
+        )
+
+
+    def p_type_array(self, p):
+        """type : type LSQUARE NUMBER RSQUARE"""
+        p[0] = ArrayType(
+            target = p[1],
+            size = p[3]
+        )
+
 
     def p_expression_var(self, p):
         """expr : name"""
@@ -157,6 +169,25 @@ class Parser:
             position  = self._position(p),
         )
 
+    def p_expression_deref(self, p):
+        """expr : STAR expr"""
+        p[0] = DerefExpression(
+                argument=p[2]
+                )
+
+    def p_ref_expression(self, p):
+        """expr : AMP expr"""
+        p[0] = RefExpression(
+                argument = p[2]
+                )
+
+    def p_array_expression(self, p):
+        """expr : expr LSQUARE expr RSQUARE"""
+        p[0] = ArrayExpression(
+                argument = p[1],
+                index = p[3]
+                )
+
     def p_expression_group(self, p):
         """expr : LPAREN expr RPAREN"""
         p[0] = p[2]
@@ -176,6 +207,13 @@ class Parser:
             position = self._position(p),
         )
 
+    def p_expression_alloc(self, p):
+        """expr : ALLOC type LSQUARE expr RSQUARE"""
+        p[0] = AllocExpression(
+            alloctype = p[2],
+            size = p[4]
+        )
+
     def p_exprs_comma_1(self, p):
         """exprs_comma_1 : expr
                         | exprs_comma_1 COMMA expr"""
@@ -189,6 +227,32 @@ class Parser:
         """exprs_comma :
                        | exprs_comma_1"""
         p[0] = [] if len(p) == 1 else p[1]
+
+    def p_assignable(self, p):
+        """assignable : var_assignable
+                      | point_assignable
+                      | array_assignable"""
+        p[0] = p[1]
+
+    def p_assignable_var(self, p):
+        """var_assignable : IDENT"""
+        p[0] = VarAssignable(
+                name = p[1]
+                )
+
+    def p_assignable_point(self, p):
+        """point_assignable : STAR expr"""
+        p[0] = PointerAssignable(
+                argument = p[2]
+                )
+    
+    def p_assignable_array(self, p):
+        """array_assignable : expr LSQUARE expr RSQUARE"""
+        p[0] = ArrayAssignable(
+                argument = p[1],
+                size = p[3]
+                )
+        
 
     def p_stmt_vardecl(self, p):
         """stmt : VAR name EQ expr COLON type SEMICOLON"""

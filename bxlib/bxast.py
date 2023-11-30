@@ -94,6 +94,22 @@ class OpAppExpression(Expression):
 
 # --------------------------------------------------------------------
 @dc.dataclass
+class DerefExpression(Expression):
+    argument: Expression
+
+# --------------------------------------------------------------------
+@dc.dataclass
+class RefExpression(Expression):
+    argument: Expression
+
+# --------------------------------------------------------------------
+@dc.dataclass
+class ArrayExpression(Expression):
+    argument: Expression
+    index : Expression
+
+# --------------------------------------------------------------------
+@dc.dataclass
 class CallExpression(Expression):
     proc: Name
     arguments: list[Expression]
@@ -104,7 +120,13 @@ class PrintExpression(Expression):
     argument: Expression
 
 # --------------------------------------------------------------------
-class Assignable(Expression):
+@dc.dataclass
+class AllocExpression(Expression):
+    alloctype : Type
+    size : Expression
+
+# --------------------------------------------------------------------
+class Assignable(AST):
     pass
 
 # --------------------------------------------------------------------
@@ -115,14 +137,14 @@ class VarAssignable(Assignable):
 # --------------------------------------------------------------------
 @dc.dataclass
 class PointerAssignable(Assignable):
-    name : str
+    argument : Expression
 
 
 # --------------------------------------------------------------------
 @dc.dataclass
 class ArrayAssignable(Assignable):
-    name : str
-    index : int
+    argument : Expression
+    index : Expression
 
 
 # --------------------------------------------------------------------
@@ -139,7 +161,7 @@ class VarDeclStatement(Statement):
 # --------------------------------------------------------------------
 @dc.dataclass
 class AssignStatement(Statement):
-    lhs: Name
+    lhs: Name #Assignable
     rhs: Expression
 
 # --------------------------------------------------------------------
@@ -152,11 +174,7 @@ class ExprStatement(Statement):
 class PrintStatement(Statement):
     value: Expression
 
-# --------------------------------------------------------------------
-@dc.dataclass
-class AllocStatement(Statement):
-    alloctype : Type
-    size : Expression
+
 
 # --------------------------------------------------------------------
 @dc.dataclass
