@@ -17,8 +17,8 @@ def pointer_decl(output_file):
     t2 = "bool"
 
     for i in range(50):
-        output.append(f"\tvar x{i} : {t1};")
-        output.append(f"\tvar y{i} : {t2};")
+        output.append(f"\tvar x{i} = null : {t1};")
+        output.append(f"\tvar y{i} = null : {t2};")
 
         t1 += "*"
         t2 += "*"
@@ -49,7 +49,7 @@ def pointer_assign(output_file):
         star_suffix += "*"
 
         for var_name in var_names : 
-            output.append(f"\tvar {var_name}{'p' * (i+1)} = &{var_name}{star_suffix[:-1]} : int{star_suffix};")
+            output.append(f"\tvar {var_name}{'p' * (i+1)} = &{var_name}{'p' * (len(star_suffix) -1)} : int{star_suffix};")
 
     with open(output_file, "w") as file : 
         file.write("\n".join(make_main(output)))
@@ -58,4 +58,5 @@ def pointer_assign(output_file):
 
 #generate all of the unit tests
 if __name__ == "__main__":
+    pointer_decl("pointer_decl.bx")
     pointer_assign("pointer_assign.bx")
