@@ -1,0 +1,11 @@
+def main(){
+    // test that null assignments are accepted for all pointers
+    var p1 = null : int*;
+    var p2 = null : bool*;
+    var p3 = null : int******;
+    var p4 = p1 : int*;
+    var p5 = null : bool**;
+
+    p4 = null;
+    p5 = null;
+}

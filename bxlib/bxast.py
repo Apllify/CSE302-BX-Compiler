@@ -16,6 +16,7 @@ class BasicType(Type, enum.Enum):
     VOID = 0
     BOOL = 1
     INT  = 2
+    NULL = 3 #used when null pointer can't be typecast 
 
     def __str__(self):
         match self:

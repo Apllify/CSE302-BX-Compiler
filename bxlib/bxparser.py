@@ -130,6 +130,12 @@ class Parser:
             position = self._position(p),
         )
 
+    def p_expression_null(self, p):
+        """expr : NULL"""
+        p[0] = NullExpression(
+            position = self._position(p)
+        )
+
     def p_expression_uniop(self, p):
         """expr : DASH expr %prec UMINUS
                 | TILD expr %prec UNEG

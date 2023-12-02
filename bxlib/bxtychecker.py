@@ -151,6 +151,14 @@ class TypeChecker:
                 self.check_integer_constant_range(value)
                 type_ = BasicType.INT
 
+            case NullExpression():
+                #conform to any pointer type 
+                if etype : 
+                    if isinstance(etype, PointerType):
+                        type_ = etype
+                else : 
+                    type_ = BasicType.NULL
+
             case OpAppExpression(opname, arguments):
                 opsig = self.SIGS[opname]
                 for atype, argument in zip(opsig[0], arguments):
