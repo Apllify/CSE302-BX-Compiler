@@ -301,6 +301,9 @@ class TypeChecker:
             case IntExpression(_):
                 return True
 
+            case BoolExpression(_):
+                return True 
+
             case _:
                 return False
 

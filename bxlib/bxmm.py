@@ -64,9 +64,12 @@ class MM:
         for decl in prgm:
             match decl:
                 case GlobVarDecl(name, init, type_):
-                    assert(isinstance(init, IntExpression))
-                    self._tac.append(TACVar(name.value, init.value))
+                    assert(isinstance(init, IntExpression) or isinstance(init, BoolExpression))
+
+                    #any boolean constant gets converted to an int 
+                    self._tac.append(TACVar(name.value, int(init.value)))
                     self._scope.push(name.value, f'@{name.value}')
+                        
 
         for decl in prgm:
             match decl:
