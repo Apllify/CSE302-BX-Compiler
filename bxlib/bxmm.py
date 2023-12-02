@@ -52,6 +52,38 @@ class MM:
     def push_label(self, label: str):
         self._proc.tac.append(f'{label}:')
 
+    def push_load(self, store_reg : str, 
+                        tb : str, 
+                        no : int,
+                        ti : Opt[str] = None, 
+                        ns : Opt[int] = None, ):
+
+        #tuple can either be length 2 or length 4
+        if ti : 
+            args = f"({tb}, {ti}, {ns}, {no})"
+        else : 
+            args = f"({tb}, {no})"
+
+        self._proc.tac.append( TAC(opcode = "load", 
+                                   result = store_reg, 
+                                   arguments = [args]  ) )
+
+    def push_store(self, value_reg : str, 
+                         tb : str, 
+                         no : int,
+                         ti : Opt[str] = None, 
+                         ns : Opt[int] = None, ) : 
+
+        #tuple can either be length 2 or length 4
+        if ti : 
+            args = f"({tb}, {ti}, {ns}, {no})"
+        else : 
+            args = f"({tb}, {no})"
+
+        self._proc.tac.append( TAC(opcode = "store", 
+                                   arguments = [value_reg, args]  ) )
+
+
     @cl.contextmanager
     def in_loop(self, labels: tuple[str, str]):
         self._loops.append(labels)
@@ -105,9 +137,10 @@ class MM:
                 self.push('copy', temp, result = self._scope[name.value])
 
             case AssignStatement(lhs, rhs):
-                temp = self.for_expression(rhs)
-                result = self.get_assignable_reg(lhs)
-                self.push('copy', temp, result = result)
+                # temp = self.for_expression(rhs)
+                # result = self.get_assignable_reg(lhs)
+                # self.push('copy', temp, result = result)
+                self.for_assignment(lhs, rhs)
 
             case ExprStatement(expr):
                 self.for_expression(expr)
@@ -162,12 +195,35 @@ class MM:
             case _:
                 assert(False)
 
-    def get_assignable_reg(self, assign : Assignable) -> str:
-        match assign : 
-            case VarAssignable(name):
-                return self._scope[name.value]
+    def for_assignment(self, lhs : Assignable, rhs : Expression):
+        """
+        Special munch case for assignments
+        """
+        temp = self.for_expression(rhs)
+
+        match lhs : 
+            case VarAssignable(name) : 
+                self.push("copy", temp, result = self._scope[name.value])
+
+            case PointerAssignable(argument) : 
+                address = self.for_expression(argument)
+                self.push_store(temp, tb = address, n0 = 0)
+
+            case ArrayAssignable(argument, index) :
+                base_address = self.for_expression(argument)
+                address_shift = self.for_expression(index)
+                
+                raise NotImplementedError() # TODO : figure out clean code for this
+
             case _ : 
                 assert(False)
+
+    # def get_assignable_reg(self, assign : Assignable) -> str:
+    #     match assign : 
+    #         case VarAssignable(name):
+    #             return self._scope[name.value]
+    #         case _ : 
+    #             assert(False)
 
     def for_expression(self, expr: Expression, force = False) -> str:
         target = None
@@ -210,6 +266,12 @@ class MM:
                     self.push('param', 1, temp)
                     proc = self.PRINTS[argument.type_]
                     self.push('call', proc, 1)
+
+                case DerefExpression(argument) : 
+                    address = self.for_expression(argument)
+                    target = self.fresh_temporary()
+
+                    self.push_load(target, tb = address, no = 0)
 
                 case _:
                     assert(False)
