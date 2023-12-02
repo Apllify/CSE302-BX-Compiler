@@ -1,0 +1,121 @@
+var x = 10 : int;
+var y = 8 : int;
+
+var fizz_low =  90 : int;
+var fizz_high = 100 : int;
+
+var prefix_high = 5 : int;
+
+var trueish = true : bool;
+var falsish = false : bool;
+
+def bool_print() {
+  print(!(((false && (false || ((!(((true && true) && true)) || (false && false)) && true))) || (((false && false) || false) && false))));
+
+  print(!((((true && true) || true) && ((!(false) && !((false || (true && (!(!(true)) && true))))) || false))) && !(!(!(((false || !(true)) || ((false || ((false && !(true)) && !(true))) || (false || false)))))));
+
+  print(((!((!(false) || false)) || !((true && true))) && ((!((true && (!(((((true || ((((false || !(true)) || ((true && true) && false)) || !(true)) && false)) || (!(true) || false)) || (!((((false || ((true && (true && !(false))) && !((false || false)))) && true) && ((false || false) || true))) || !(((false || true) && ((true && true) && true))))) && false)) || true))) && ((!(((!(((false || (!(true) || false)) || (true && false))) || !((((true && (true && true)) && (!((((!(false) && false) || ((!(!(false)) && true) || false)) || false)) && (true && (true && true)))) && (!(!(true)) && !((true && false)))))) && false)) || false) && true)) || !(((false && false) || !(!(!(true))))))) || (!(((true || (false || (false || !(true)))) && (!((false && false)) && (true && true)))) && !((!(false) || ((true && true) && true)))));
+
+  print(!(((!(((((true && (true || false)) || false) && (true || true)) && !(false))) && !(((true && !(true)) || ((false && true) && (!((false || false)) || !((!((true && true)) && false))))))) || (((((true && true) && true) || ((((true || true) && (true && true)) && false) || false)) || ((false && (false || false)) && (((false || false) || (false || !(true))) || false))) && !(((true && (true && !((false || (((false && true) || false) || false))))) && ((!(false) || ((true && !(false)) && true)) && true)))))) && (((!(!((false && false))) && !((!(!((false || (false && (!(true) || !(false)))))) || !(false)))) && ((((!(true) && false) || !(false)) || ((true && true) && !(((false || (false && ((false || !((true || true))) || (true && false)))) || !(true))))) && !(((false || (false || false)) || !(true))))) || ((((!(!((true && !(false)))) && (true && ((false && false) || (false || ((!(false) && true) && false))))) && ((((!((true || (!(false) && (((!(((true && ((((((false || false) || false) && true) || !(false)) || (!(true) && false)) || (true && (false && (false || false))))) || (true && (((true && (true || true)) && false) || !(true))))) || false) && true) && (!(false) && true))))) || false) && false) || (false && false)) && !((false || (true && false))))) && !(!((false || (((!(!(false)) && false) && (true || !(((false || false) || true)))) || !((((true && !((!(false) && false))) && true) && !(((false && ((true && ((true || ((!(false) && (true || false)) && true)) && !((!((!(!(false)) || (true && !((true && false))))) || false)))) && true)) || false))))))))) || ((((true && ((true && !((true && false))) && !(true))) || (!(!(!((true && !(false))))) && true)) || ((false || (false || false)) && !(false))) || !((!((false && (true && (false || (true && false))))) && ((true || (false || (false || (true && true)))) || false)))))));
+}
+
+def fizzbuzz(cur : int, last : int) {
+  while (cur <= last) {
+    if (cur % 3 == 0) {
+      if (cur % 5 == 0) {
+         print(151515);
+      } else {
+         print(333);
+      }
+    } else if (cur % 5 == 0) {
+      print(555);
+    } else {
+      print(cur);
+    }
+    cur = cur + 1;
+  }
+}
+
+def fact(n : int) : int {
+  return fact_(1, n);
+}
+
+def fact_(acc : int, n : int) : int {
+  if (n <= 0) {
+    return acc;
+  }
+  return fact_(acc * n, n - 1);
+}
+
+def prefix_sum(bound : int) : int{
+  var count = bound : int;
+  var x = 0 : int;
+  var sum = 0 : int;
+  while (true) {
+    if (count == 0) { break; }
+    print(count);
+    x = 1;
+    sum = 0;
+    while (true) {
+      if (x > count) { break; }
+      sum = sum + x;
+      x = x + 1;
+    }
+    print(sum);
+    count = count - 1;
+  }
+
+  return 0;
+}
+
+def main(){
+    bool_print();
+
+    print(888888888);
+
+    fizzbuzz(fizz_low, fizz_high);
+
+    print(888888888);
+
+    print(fact(x));
+    print(fact(y));
+
+    print(888888888);
+
+    prefix_sum(prefix_high);
+
+}
+
+
+
+// Expected output of the program is :
+// true
+// true
+// false
+// false
+// 888888888
+// 151515
+// 91
+// 92
+// 333
+// 94
+// 555
+// 333
+// 97
+// 98
+// 333
+// 555
+// 888888888
+// 3628800
+// 40320
+// 888888888
+// 5
+// 15
+// 4
+// 10
+// 3
+// 6
+// 2
+// 3
+// 1
+// 1
