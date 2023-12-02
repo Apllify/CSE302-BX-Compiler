@@ -133,7 +133,7 @@ class Assignable(AST):
 # --------------------------------------------------------------------
 @dc.dataclass
 class VarAssignable(Assignable):
-    name : str
+    name : Name
 
 # --------------------------------------------------------------------
 @dc.dataclass
@@ -162,7 +162,7 @@ class VarDeclStatement(Statement):
 # --------------------------------------------------------------------
 @dc.dataclass
 class AssignStatement(Statement):
-    lhs: Name #Assignable
+    lhs: Assignable
     rhs: Expression
 
 # --------------------------------------------------------------------

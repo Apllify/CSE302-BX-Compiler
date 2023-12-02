@@ -199,6 +199,8 @@ class TypeChecker:
 
                 type_ = BasicType.VOID
 
+            
+
             case _:
                 print(expr)
                 assert(False)
@@ -213,6 +215,24 @@ class TypeChecker:
 
         expr.type_ = type_
 
+    def for_assignable(self, assign : Assignable):
+        """
+        Computes and stores the type of an assignable object
+        """
+        type_ = None 
+
+        match assign : 
+            case VarAssignable(name):
+                type_ = self.check_local_bound(name)
+
+            case _ : 
+                self.report(
+                    'unsupported assignable',
+                    position = assign.position,
+                )
+
+        assign.type_ = type_
+
     def for_statement(self, stmt : Statement):
         match stmt:
             case VarDeclStatement(name, init, type_):
@@ -221,8 +241,8 @@ class TypeChecker:
                 self.for_expression(init, etype = type_)
 
             case AssignStatement(lhs, rhs):
-                lhstype = self.check_local_bound(lhs)
-                self.for_expression(rhs, etype = lhstype)
+                self.for_assignable(lhs)
+                self.for_expression(rhs, etype = lhs.type_)
 
             case ExprStatement(expression):
                 self.for_expression(expression)

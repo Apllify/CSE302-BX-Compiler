@@ -106,7 +106,8 @@ class MM:
 
             case AssignStatement(lhs, rhs):
                 temp = self.for_expression(rhs)
-                self.push('copy', temp, result = self._scope[lhs.value])
+                result = self.get_assignable_reg(lhs)
+                self.push('copy', temp, result = result)
 
             case ExprStatement(expr):
                 self.for_expression(expr)
@@ -159,6 +160,13 @@ class MM:
                     self.push('ret', temp)
 
             case _:
+                assert(False)
+
+    def get_assignable_reg(self, assign : Assignable) -> str:
+        match assign : 
+            case VarAssignable(name):
+                return self._scope[name.value]
+            case _ : 
                 assert(False)
 
     def for_expression(self, expr: Expression, force = False) -> str:
