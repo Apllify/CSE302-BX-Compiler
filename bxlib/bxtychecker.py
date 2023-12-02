@@ -225,6 +225,29 @@ class TypeChecker:
             case VarAssignable(name):
                 type_ = self.check_local_bound(name)
 
+            case PointerAssignable(argument):
+                self.for_expression(argument)
+
+                if not isinstance(argument.type_, PointerType) :
+                    self.report(
+                        'cannot dereference non-pointer value',
+                        position = assign.position,
+                    )
+
+                type_ = argument.type_.target
+
+
+            case ArrayAssignable(argument, index):
+                self.for_expression(argument)
+
+                if not isinstance(argument.type_, ArrayType):
+                    self.report(
+                        'cannot index non-array value',
+                        position = assign.position,
+                    )
+
+                type_ = argument.type_.target
+
             case _ : 
                 self.report(
                     'unsupported assignable',
