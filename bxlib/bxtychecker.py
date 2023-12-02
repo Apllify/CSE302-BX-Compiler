@@ -199,7 +199,58 @@ class TypeChecker:
 
                 type_ = BasicType.VOID
 
-            
+            case AllocExpression(alloctype, size):
+                self.for_expression(size, BasicType.INT)
+
+                type_ = PointerType(alloctype)
+
+            case ArrayExpression(argument, index):
+                self.for_expression(argument)
+                self.for_expression(index, BasicType.INT)
+
+                if not isinstance(argument.type_, ArrayType):
+                    self.report(
+                        f"can only index arrays, not {argument.type_}",
+                        position = argument.position
+                    ) 
+
+                #check index within bounds
+                match index : 
+                    case IntExpression(value):
+                        if value not in range(0, argument.type_.size):
+                            self.report(
+                                'illegal array index',
+                                position = assign.position
+                            )
+                    case _ :
+                        pass
+
+                type_ = argument.type_.target
+
+            case RefExpression(argument):
+                self.for_expression(argument)
+
+                #check that the arg is a var 
+                if not (isinstance(argument, VarExpression)):
+                    self.report(
+                        "only a variable can be referenced",
+                        position = argument.position
+                    )
+
+                type_  = PointerType(argument.type_)
+
+            case DerefExpression(argument):
+                self.for_expression(argument)
+
+                if not isinstance(argument.type_, PointerType):
+                    self.report(
+                        "only a pointer can be dereferenced",
+                        position = argument.position
+                    )
+
+                type_ = argument.type_.target
+
+                
 
             case _:
                 print(expr)
@@ -239,12 +290,24 @@ class TypeChecker:
 
             case ArrayAssignable(argument, index):
                 self.for_expression(argument)
+                self.for_expression(index, BasicType.INT)
 
                 if not isinstance(argument.type_, ArrayType):
                     self.report(
                         'cannot index non-array value',
                         position = assign.position,
                     )
+
+                #check index within bounds
+                match index : 
+                    case IntExpression(value):
+                        if value not in range(0, argument.type_.size):
+                            self.report(
+                                'illegal array index',
+                                position = assign.position
+                            )
+                    case _ :
+                        pass
 
                 type_ = argument.type_.target
 

@@ -95,6 +95,12 @@ class OpAppExpression(Expression):
 
 # --------------------------------------------------------------------
 @dc.dataclass
+class AllocExpression(Expression):
+    alloctype : Type
+    size : Expression
+
+# --------------------------------------------------------------------
+@dc.dataclass
 class DerefExpression(Expression):
     argument: Expression
 
@@ -120,11 +126,7 @@ class CallExpression(Expression):
 class PrintExpression(Expression):
     argument: Expression
 
-# --------------------------------------------------------------------
-@dc.dataclass
-class AllocExpression(Expression):
-    alloctype : Type
-    size : Expression
+
 
 # --------------------------------------------------------------------
 class Assignable(AST):
