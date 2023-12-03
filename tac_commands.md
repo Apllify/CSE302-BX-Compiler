@@ -17,4 +17,10 @@
 
 # Newly added commands : 
 - %t1 = load (tb, ti, ns, no)
-- store %t1, (tb, ti, ns, no)
+- store %t1, (tb, ti, ns, no)  
+=> Commands suggested by TD
+- %t1 = ref %t2   
+=> Encodes the & operator
+- %t1 = alloc %t2
+- zero_out (%tb, num_bytes)   
+=> Refer to runtime c functions
