@@ -264,7 +264,7 @@ class Parser:
         """array_assignable : expr LSQUARE expr RSQUARE"""
         p[0] = ArrayAssignable(
                 argument = p[1],
-                size = p[3],
+                index = p[3],
                 position = self._position(p),
                 )
         

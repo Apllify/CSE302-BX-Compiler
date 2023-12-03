@@ -159,15 +159,19 @@ class MM:
 
     def for_statement(self, stmt: Statement):
         match stmt:
-            case VarDeclStatement(name, init):
+            case VarDeclStatement(name, init, type):
                 self._scope.push(name.value, self.fresh_temporary())
-                temp = self.for_expression(init)
-                self.push('copy', temp, result = self._scope[name.value])
+
+                if not isinstance(type, ArrayType):
+                    temp = self.for_expression(init)
+                    self.push('copy', temp, result = self._scope[name.value])
+                else:  
+                    #the array var only stores a pointer to the real array on stack
+                    array_size = type.size * MM.get_type_size(type.target)
+                    self.push("s_alloc", array_size, result = self._scope[name.value]) 
+                    self.push("zero_out", f"({self._scope[name.value]}, {array_size})")
 
             case AssignStatement(lhs, rhs):
-                # temp = self.for_expression(rhs)
-                # result = self.get_assignable_reg(lhs)
-                # self.push('copy', temp, result = result)
                 self.for_assignment(lhs, rhs)
 
             case ExprStatement(expr):
@@ -278,6 +282,10 @@ class MM:
                 case IntExpression(value):
                     target = self.fresh_temporary()
                     self.push('const', value, result = target)
+                
+                case NullExpression():
+                    target = self.fresh_temporary()
+                    self.push("const", 0, result = target)
 
                 case OpAppExpression(operator, arguments):
                     target    = self.fresh_temporary()
@@ -313,6 +321,36 @@ class MM:
                     elem_size = MM.get_type_size(argument.type_.target)
 
                     self.push_load(target, tb = base_address, no = 0, ti = address_shift, ns = elem_size)
+
+                case RefExpression(argument):
+                    #compute ref based on class of arg
+                    match argument : 
+                        case VarExpression(name) :
+                            target = self.fresh_temporary()
+                            var_reg = self._scope[name.value]
+                            self.push("ref", var_reg, result = target)
+
+                        case DerefExpression(argument):
+                            target = self.for_expression(argument)
+
+                        case ArrayExpression(argument, index):
+                            base_address = self.for_expression(argument)
+                            shift_count = self.for_expression(index)
+
+                            assert(isinstance(argument.type_, ArrayType))
+                            elem_size = MM.get_type_size(argument.type_.target)
+                            shift_unit = self.fresh_temporary()
+                            self.push("const", elem_size, result= shift_unit) 
+
+                            total_shift = self.fresh_temporary() 
+                            self.push("mul", shift_count, shift_unit, result = total_shift)
+
+                            target = self.fresh_temporary()
+                            self.push("add", base_address, total_shift, result = target)
+                        
+                        case _ : 
+                            assert(False)
+                    pass
 
                 case _:
                     assert(False)

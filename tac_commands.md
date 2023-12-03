@@ -26,3 +26,4 @@
 => Refer to runtime c functions
 - %t1 = s_alloc n   
 => Allocates known memory amount on stack (performed during tac to assembly directly)
+=> This is because our array vars should just be stack pointers
