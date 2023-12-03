@@ -24,3 +24,5 @@
 - %t1 = alloc %t2
 - zero_out (%tb, num_bytes)   
 => Refer to runtime c functions
+- %t1 = s_alloc n   
+=> Allocates known memory amount on stack (performed during tac to assembly directly)
