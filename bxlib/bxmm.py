@@ -31,6 +31,34 @@ class MM:
         mm = MM(); mm.for_program(prgm)
         return mm._tac
 
+    @staticmethod 
+    def get_type_size(type_ : Type): 
+        """
+        Compute and return the size of a type (in bytes)
+        """
+        size = 0
+
+        match type_ : 
+            case BasicType.INT : 
+                size = 8
+            case BasicType.BOOL : 
+                size = 8
+            case BasicType.NULL : 
+                size = 8
+
+            case PointerType(target):
+                size = 8
+
+            case ArrayType(target, size):
+                size = MM.get_type_size(target) * size
+
+            case _ : 
+                assert(False)
+                
+
+        return size
+
+
     @classmethod
     def fresh_temporary(cls):
         cls._counter += 1
@@ -199,21 +227,24 @@ class MM:
         """
         Special munch case for assignments
         """
-        temp = self.for_expression(rhs)
+        rhs_val = self.for_expression(rhs)
 
         match lhs : 
             case VarAssignable(name) : 
-                self.push("copy", temp, result = self._scope[name.value])
+                self.push("copy", rhs_val, result = self._scope[name.value])
 
             case PointerAssignable(argument) : 
                 address = self.for_expression(argument)
-                self.push_store(temp, tb = address, n0 = 0)
+                self.push_store(rhs_val, tb = address, no = 0)
 
             case ArrayAssignable(argument, index) :
                 base_address = self.for_expression(argument)
                 address_shift = self.for_expression(index)
+
+                assert(isinstance(argument.type_, ArrayType))
+                elem_size = MM.get_type_size(argument.type_.target)
                 
-                raise NotImplementedError() # TODO : figure out clean code for this
+                self.push_store(rhs_val, tb = base_address, no = 0, ti = address_shift, ns = elem_size)
 
             case _ : 
                 assert(False)
@@ -272,6 +303,16 @@ class MM:
                     target = self.fresh_temporary()
 
                     self.push_load(target, tb = address, no = 0)
+
+                case ArrayExpression(argument, index):
+                    target = self.fresh_temporary()
+                    base_address = self.for_expression(argument)
+                    address_shift = self.for_expression(index)
+
+                    assert(isinstance(argument.type_, ArrayType))
+                    elem_size = MM.get_type_size(argument.type_.target)
+
+                    self.push_load(target, tb = base_address, no = 0, ti = address_shift, ns = elem_size)
 
                 case _:
                     assert(False)
