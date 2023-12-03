@@ -324,7 +324,21 @@ class TypeChecker:
             case VarDeclStatement(name, init, type_):
                 if self.check_local_free(name):
                     self.scope.push(name.value, type_)
-                self.for_expression(init, etype = type_)
+
+                if isinstance(type_, ArrayType) : 
+                    #arrays only initialized with the 0 constant
+                    self.for_expression(init)
+                    
+                    match init : 
+                        case IntExpression(value = 0):
+                            pass
+                        case _ : 
+                            self.report(
+                                'arrays can only be initialized with literal "0"',
+                                position = stmt.position,
+                            )                
+                else: 
+                    self.for_expression(init, etype = type_)
 
             case AssignStatement(lhs, rhs):
                 self.for_assignable(lhs)
