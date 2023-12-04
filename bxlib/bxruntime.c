@@ -20,3 +20,7 @@ void zero_out(void* address, size_t num_bytes) {
 void* alloc(size_t num_bytes){
   return (malloc(num_bytes));
 }
+
+void* copy_array(void* dest, void* src, size_t n){
+  return memcpy(dest, src, n);
+}
