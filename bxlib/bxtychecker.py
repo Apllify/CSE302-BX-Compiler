@@ -215,15 +215,16 @@ class TypeChecker:
                     ) 
 
                 #check index within bounds
-                match index : 
-                    case IntExpression(value):
-                        if value not in range(0, argument.type_.size):
-                            self.report(
-                                'illegal array index',
-                                position = assign.position
-                            )
-                    case _ :
-                        pass
+                if isinstance(argument.type_, ArrayType):
+                    match index : 
+                        case IntExpression(value):
+                            if value not in range(0, argument.type_.size):
+                                self.report(
+                                    'illegal array index',
+                                    position = argument.position
+                                )
+                        case _ :
+                            pass
 
                 type_ = argument.type_.target
 
