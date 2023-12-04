@@ -151,6 +151,14 @@ class TypeChecker:
                 self.check_integer_constant_range(value)
                 type_ = BasicType.INT
 
+            case NullExpression():
+                #conform to any pointer type 
+                if etype : 
+                    if isinstance(etype, PointerType):
+                        type_ = etype
+                else : 
+                    type_ = BasicType.NULL
+
             case OpAppExpression(opname, arguments):
                 opsig = self.SIGS[opname]
                 for atype, argument in zip(opsig[0], arguments):
@@ -191,6 +199,60 @@ class TypeChecker:
 
                 type_ = BasicType.VOID
 
+            case AllocExpression(alloctype, size):
+                self.for_expression(size, BasicType.INT)
+
+                type_ = PointerType(alloctype)
+
+            case ArrayExpression(argument, index):
+                self.for_expression(argument)
+                self.for_expression(index, BasicType.INT)
+
+                if not (isinstance(argument.type_, ArrayType) or isinstance(argument.type_, PointerType)):
+                    self.report(
+                        f"can only index arrays and pointers, not {argument.type_}",
+                        position = argument.position
+                    ) 
+
+                #check index within bounds
+                if isinstance(argument.type_, ArrayType):
+                    match index : 
+                        case IntExpression(value):
+                            if value not in range(0, argument.type_.size):
+                                self.report(
+                                    'illegal array index',
+                                    position = argument.position
+                                )
+                        case _ :
+                            pass
+
+                type_ = argument.type_.target
+
+            case RefExpression(argument):
+                self.for_expression(argument)
+
+                #check that the arg is a var 
+                if not (isinstance(argument, VarExpression)):
+                    self.report(
+                        "only a variable can be referenced",
+                        position = argument.position
+                    )
+
+                type_  = PointerType(argument.type_)
+
+            case DerefExpression(argument):
+                self.for_expression(argument)
+
+                if not isinstance(argument.type_, PointerType):
+                    self.report(
+                        "only a pointer can be dereferenced",
+                        position = argument.position
+                    )
+
+                type_ = argument.type_.target
+
+                
+
             case _:
                 print(expr)
                 assert(False)
@@ -205,16 +267,83 @@ class TypeChecker:
 
         expr.type_ = type_
 
+    def for_assignable(self, assign : Assignable):
+        """
+        Computes and stores the type of an assignable object
+        """
+        type_ = None 
+
+        match assign : 
+            case VarAssignable(name):
+                type_ = self.check_local_bound(name)
+
+            case PointerAssignable(argument):
+                self.for_expression(argument)
+
+                if not isinstance(argument.type_, PointerType) :
+                    self.report(
+                        'cannot dereference non-pointer value',
+                        position = assign.position,
+                    )
+
+                type_ = argument.type_.target
+
+
+            case ArrayAssignable(argument, index):
+                self.for_expression(argument)
+                self.for_expression(index, BasicType.INT)
+
+                if not isinstance(argument.type_, ArrayType):
+                    self.report(
+                        'cannot index non-array value',
+                        position = assign.position,
+                    )
+
+                #check index within bounds
+                match index : 
+                    case IntExpression(value):
+                        if value not in range(0, argument.type_.size):
+                            self.report(
+                                'illegal array index',
+                                position = assign.position
+                            )
+                    case _ :
+                        pass
+
+                type_ = argument.type_.target
+
+            case _ : 
+                self.report(
+                    'unsupported assignable',
+                    position = assign.position,
+                )
+
+        assign.type_ = type_
+
     def for_statement(self, stmt : Statement):
         match stmt:
             case VarDeclStatement(name, init, type_):
                 if self.check_local_free(name):
                     self.scope.push(name.value, type_)
-                self.for_expression(init, etype = type_)
+
+                if isinstance(type_, ArrayType) : 
+                    #arrays only initialized with the 0 constant
+                    self.for_expression(init)
+                    
+                    match init : 
+                        case IntExpression(value = 0):
+                            pass
+                        case _ : 
+                            self.report(
+                                'arrays can only be initialized with literal "0"',
+                                position = stmt.position,
+                            )                
+                else: 
+                    self.for_expression(init, etype = type_)
 
             case AssignStatement(lhs, rhs):
-                lhstype = self.check_local_bound(lhs)
-                self.for_expression(rhs, etype = lhstype)
+                self.for_assignable(lhs)
+                self.for_expression(rhs, etype = lhs.type_)
 
             case ExprStatement(expression):
                 self.for_expression(expression)

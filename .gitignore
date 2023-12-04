@@ -1,5 +1,10 @@
 __pycache__/
+.vscode/
+
 *.exe
 *.o
 *.s
-alias_cmd.sh
+*.out
+
+alias_cmd.sh 
+# ^ added by rali, please don't touch

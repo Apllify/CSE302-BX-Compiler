@@ -130,6 +130,12 @@ class Parser:
             position = self._position(p),
         )
 
+    def p_expression_null(self, p):
+        """expr : NULL"""
+        p[0] = NullExpression(
+            position = self._position(p)
+        )
+
     def p_expression_uniop(self, p):
         """expr : DASH expr %prec UMINUS
                 | TILD expr %prec UNEG
@@ -169,23 +175,34 @@ class Parser:
             position  = self._position(p),
         )
 
+    def p_expression_alloc(self, p):
+        """expr : ALLOC type LSQUARE expr RSQUARE"""
+        p[0] = AllocExpression(
+                alloctype = p[2],
+                size = p[4],
+                position = self._position(p),
+                )
+
     def p_expression_deref(self, p):
         """expr : STAR expr"""
         p[0] = DerefExpression(
-                argument=p[2]
+                argument=p[2],
+                position = self._position(p),
                 )
 
-    def p_ref_expression(self, p):
+    def p_expression_ref(self, p):
         """expr : AMP expr"""
         p[0] = RefExpression(
-                argument = p[2]
+                argument = p[2],
+                position = self._position(p),
                 )
 
-    def p_array_expression(self, p):
+    def p_expression_array(self, p):
         """expr : expr LSQUARE expr RSQUARE"""
         p[0] = ArrayExpression(
                 argument = p[1],
-                index = p[3]
+                index = p[3],
+                position = self._position(p),
                 )
 
     def p_expression_group(self, p):
@@ -207,12 +224,7 @@ class Parser:
             position = self._position(p),
         )
 
-    def p_expression_alloc(self, p):
-        """expr : ALLOC type LSQUARE expr RSQUARE"""
-        p[0] = AllocExpression(
-            alloctype = p[2],
-            size = p[4]
-        )
+
 
     def p_exprs_comma_1(self, p):
         """exprs_comma_1 : expr
@@ -235,22 +247,25 @@ class Parser:
         p[0] = p[1]
 
     def p_assignable_var(self, p):
-        """var_assignable : IDENT"""
+        """var_assignable : name"""
         p[0] = VarAssignable(
-                name = p[1]
+                name = p[1],
+                position = self._position(p),
                 )
 
     def p_assignable_point(self, p):
         """point_assignable : STAR expr"""
         p[0] = PointerAssignable(
-                argument = p[2]
+                argument = p[2],
+                position = self._position(p),
                 )
     
     def p_assignable_array(self, p):
         """array_assignable : expr LSQUARE expr RSQUARE"""
         p[0] = ArrayAssignable(
                 argument = p[1],
-                size = p[3]
+                index = p[3],
+                position = self._position(p),
                 )
         
 
@@ -264,7 +279,7 @@ class Parser:
         )
 
     def p_stmt_assign(self, p):
-        """stmt : name EQ expr SEMICOLON"""
+        """stmt : assignable EQ expr SEMICOLON"""
         p[0] = AssignStatement(
             lhs      = p[1],
             rhs      = p[3],

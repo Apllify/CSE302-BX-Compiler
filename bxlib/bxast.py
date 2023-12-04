@@ -16,6 +16,7 @@ class BasicType(Type, enum.Enum):
     VOID = 0
     BOOL = 1
     INT  = 2
+    NULL = 3 #used when null pointer can't be typecast 
 
     def __str__(self):
         match self:
@@ -94,6 +95,12 @@ class OpAppExpression(Expression):
 
 # --------------------------------------------------------------------
 @dc.dataclass
+class AllocExpression(Expression):
+    alloctype : Type
+    size : Expression
+
+# --------------------------------------------------------------------
+@dc.dataclass
 class DerefExpression(Expression):
     argument: Expression
 
@@ -119,11 +126,7 @@ class CallExpression(Expression):
 class PrintExpression(Expression):
     argument: Expression
 
-# --------------------------------------------------------------------
-@dc.dataclass
-class AllocExpression(Expression):
-    alloctype : Type
-    size : Expression
+
 
 # --------------------------------------------------------------------
 class Assignable(AST):
@@ -132,7 +135,7 @@ class Assignable(AST):
 # --------------------------------------------------------------------
 @dc.dataclass
 class VarAssignable(Assignable):
-    name : str
+    name : Name
 
 # --------------------------------------------------------------------
 @dc.dataclass
@@ -161,7 +164,7 @@ class VarDeclStatement(Statement):
 # --------------------------------------------------------------------
 @dc.dataclass
 class AssignStatement(Statement):
-    lhs: Name #Assignable
+    lhs: Assignable
     rhs: Expression
 
 # --------------------------------------------------------------------
