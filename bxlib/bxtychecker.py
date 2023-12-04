@@ -208,9 +208,9 @@ class TypeChecker:
                 self.for_expression(argument)
                 self.for_expression(index, BasicType.INT)
 
-                if not isinstance(argument.type_, ArrayType):
+                if not (isinstance(argument.type_, ArrayType) or isinstance(argument.type_, PointerType)):
                     self.report(
-                        f"can only index arrays, not {argument.type_}",
+                        f"can only index arrays and pointers, not {argument.type_}",
                         position = argument.position
                     ) 
 
