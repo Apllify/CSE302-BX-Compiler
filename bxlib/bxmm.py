@@ -245,7 +245,7 @@ class MM:
                 base_address = self.for_expression(argument)
                 address_shift = self.for_expression(index)
 
-                assert(isinstance(argument.type_, ArrayType))
+                assert(isinstance(argument.type_, ArrayType) or isinstance(argument.type_, PointerType))
                 elem_size = MM.get_type_size(argument.type_.target)
                 
                 self.push_store(rhs_val, tb = base_address, no = 0, ti = address_shift, ns = elem_size)
@@ -317,7 +317,7 @@ class MM:
                     base_address = self.for_expression(argument)
                     address_shift = self.for_expression(index)
 
-                    assert(isinstance(argument.type_, ArrayType))
+                    assert(isinstance(argument.type_, ArrayType) or isinstance(argument.type_, PointerType))
                     elem_size = MM.get_type_size(argument.type_.target)
 
                     self.push_load(target, tb = base_address, no = 0, ti = address_shift, ns = elem_size)
@@ -337,7 +337,7 @@ class MM:
                             base_address = self.for_expression(argument)
                             shift_count = self.for_expression(index)
 
-                            assert(isinstance(argument.type_, ArrayType))
+                            assert(isinstance(argument.type_, ArrayType) or isinstance(argument.type_, ArrayType))
                             elem_size = MM.get_type_size(argument.type_.target)
                             shift_unit = self.fresh_temporary()
                             self.push("const", elem_size, result= shift_unit) 
