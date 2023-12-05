@@ -226,6 +226,21 @@ class MM:
             case _:
                 assert(False)
 
+    def for_array_assignment(self, lhs : Assignable, rhs : Assignable):
+        """
+        Special munch case for array assignments
+        """
+        assert(isinstance(lhs.type_, ArrayType) and isinstance(rhs.type_, ArrayType))
+        assert(lhs.type_.size == rhs.type_.size)
+
+        mem_size = lhs.type_.size
+        lhs_address = self.store_elem_address(lhs)
+        rhs_address = self.store_elem_address(rhs)
+
+        self.push("copy_array", f"({lhs_address}, {rhs_address}, {mem_size})")
+        
+
+
     def for_assignment(self, lhs : Assignable, rhs : Expression):
         """
         Special munch case for assignments
