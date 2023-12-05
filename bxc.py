@@ -24,6 +24,7 @@ from bxlib.bxcfg        import tac2cfg, cfg2tac, uce, jthreading
 def parse_args():
     parser = argparse.ArgumentParser(prog = os.path.basename(sys.argv[0]))
 
+    parser.add_argument("--tac", "-t", action = "store_true", help = "flag to generate intermediate TAC")
     parser.add_argument('input', help = 'input file (.bx)')
 
     aout = parser.parse_args()
@@ -38,6 +39,8 @@ def parse_args():
 
 def _main():
     args = parse_args()
+    basename = os.path.splitext(args.input)[0]
+    basename = os.path.basename(basename)
 
     try:
         with open(args.input, 'r') as stream:
@@ -65,18 +68,29 @@ def _main():
                 # Other CFG-based optimizations should be inserted here
                 decl.tac = cfg2tac(uce(jthreading(tac2cfg(ptac))))
 
+
+    if args.tac : 
+        try :
+            with open(f"{basename}.tac", "w") as stream : 
+                for tac_cmd in tac :
+                    stream.write(repr(tac_cmd) + "\n\n") 
+
+        except IOError as e:
+            print(f'cannot write TAC file {args.output}: {e}')
+            exit(1)
+
+
     abk = AsmGen.get_backend('x64-linux')
     asm = abk.lower(tac)
 
-    basename = os.path.splitext(args.input)[0]
-    basename = os.path.basename(basename)
+
 
     try:
         with open(f'{basename}.s', 'w') as stream:
             stream.write(asm)
 
     except IOError as e:
-        print(f'cannot write outpout file {args.output}: {e}')
+        print(f'cannot write output file {args.output}: {e}')
         exit(1)
 
     bxruntime = os.path.join(os.path.dirname(__file__), 'bxlib', 'bxruntime.c')

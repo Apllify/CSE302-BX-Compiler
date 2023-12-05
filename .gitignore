@@ -5,6 +5,8 @@ __pycache__/
 *.o
 *.s
 *.out
+*.tac
+*.tac.json
 
 alias_cmd.sh 
 # ^ added by rali, please don't touch

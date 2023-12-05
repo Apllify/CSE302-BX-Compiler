@@ -58,7 +58,8 @@ class TACProc:
             aout = f"{aout}({', '.join(map(repr, self.arguments))})"
         aout = [f"{aout}:"]
         for tac in self.tac:
-            aout.append(f"    {tac};")
+            is_label = (isinstance(tac, str) and tac[0] == "." and tac[-1] == ":")
+            aout.append(f"    {tac}{';' * (not is_label)}")
         return "\n".join(aout) + "\n"
 
 # --------------------------------------------------------------------
