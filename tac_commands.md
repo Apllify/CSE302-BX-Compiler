@@ -20,7 +20,7 @@
 - store %t1, (tb, ti, ns, no)  
 => Commands suggested by TD
 - %t1 = lea (tb, ti, ns, no)
-=> Useful for ref implementation 
+=> Useful for slight optimizations
 - %t1 = ref %t2   
 => Encodes the & operator
 - %t1 = alloc %t2

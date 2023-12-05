@@ -232,28 +232,9 @@ class MM:
         Special munch case for assignments
         """
         rhs_val = self.for_expression(rhs)
+        lhs_address = self.store_elem_address(lhs)
 
-        match lhs : 
-            case VarAssignable(name) : 
-                self.push("copy", rhs_val, result = self._scope[name.value])
-
-            case DerefAssignable(argument) : 
-                address = self.for_expression(argument)
-                self.push_store(rhs_val, tb = address, no = 0)
-
-            case ArrayAssignable(argument, index) :
-                base_address = self.for_expression(argument)
-                address_shift = self.for_expression(index)
-
-                assert(isinstance(argument.type_, ArrayType) or isinstance(argument.type_, PointerType))
-                elem_size = MM.get_type_size(argument.type_.target)
-                
-                self.push_store(rhs_val, tb = base_address, no = 0, ti = address_shift, ns = elem_size)
-
-            case _ : 
-                assert(False)
-
-
+        self.push_store(rhs_val, tb = lhs_address, no = 0)
 
 
     def for_expression(self, expr: Expression, force = False) -> str:
@@ -322,7 +303,12 @@ class MM:
 
         return target
 
-    def store_elem_address(self, elem : Assignable):
+
+    def store_elem_address(self, elem : Assignable) -> str :
+        """
+        Computes the address of an assignable.
+        Returns a register where that address is stored.
+        """
 
         #iterate over class of elem
         match elem : 
@@ -359,6 +345,7 @@ class MM:
                 self.push("add", target, address_shift, result = target)
 
         return target
+        
 
     CMP_JMP = {
         'cmp-equal'                 : 'jz',
