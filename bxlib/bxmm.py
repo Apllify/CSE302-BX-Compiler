@@ -226,7 +226,7 @@ class MM:
             case _:
                 assert(False)
 
-    def for_array_assignment(self, lhs : Assignable, rhs : Assignable):
+    def for_array_assignment(self, lhs : Assignable, rhs : Assignable) -> None:
         """
         Special munch case for array assignments
         """
@@ -241,10 +241,17 @@ class MM:
         
 
 
-    def for_assignment(self, lhs : Assignable, rhs : Expression):
+    def for_assignment(self, lhs : Assignable, rhs : Expression) -> None:
         """
         Special munch case for assignments
         """
+
+        if isinstance(lhs.type_, ArrayType):
+            assert(isinstance(rhs.type_, ArrayType) and isinstance(rhs, Assignable))
+            self.for_array_assignment(lhs, rhs)
+            return 
+
+
         rhs_val = self.for_expression(rhs)
 
         # handle non-variable assignments separately
