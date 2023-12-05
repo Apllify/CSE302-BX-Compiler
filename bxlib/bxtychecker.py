@@ -140,9 +140,9 @@ class TypeChecker:
         type_ = None
 
         match expr:
-            case VarExpression(name):
-                if self.check_local_bound(name):
-                    type_ = self.scope[name.value]
+            # case VarExpression(name):
+            #     if self.check_local_bound(name):
+            #         type_ = self.scope[name.value]
 
             case BoolExpression(_):
                 type_ = BasicType.BOOL
@@ -204,53 +204,10 @@ class TypeChecker:
 
                 type_ = PointerType(alloctype)
 
-            case ArrayExpression(argument, index):
-                self.for_expression(argument)
-                self.for_expression(index, BasicType.INT)
 
-                if not (isinstance(argument.type_, ArrayType) or isinstance(argument.type_, PointerType)):
-                    self.report(
-                        f"can only index arrays and pointers, not {argument.type_}",
-                        position = argument.position
-                    ) 
-
-                #check index within bounds
-                if isinstance(argument.type_, ArrayType):
-                    match index : 
-                        case IntExpression(value):
-                            if value not in range(0, argument.type_.size):
-                                self.report(
-                                    'illegal array index',
-                                    position = argument.position
-                                )
-                        case _ :
-                            pass
-
-                type_ = argument.type_.target
-
-            case RefExpression(argument):
-                self.for_expression(argument)
-
-                #check that the arg is a var 
-                if not (isinstance(argument, VarExpression)):
-                    self.report(
-                        "only a variable can be referenced",
-                        position = argument.position
-                    )
-
-                type_  = PointerType(argument.type_)
-
-            case DerefExpression(argument):
-                self.for_expression(argument)
-
-                if not isinstance(argument.type_, PointerType):
-                    self.report(
-                        "only a pointer can be dereferenced",
-                        position = argument.position
-                    )
-
-                type_ = argument.type_.target
-
+            case Assignable():
+                self.for_assignable(expr)
+                type_ = expr.type_
                 
 
             case _:
@@ -277,7 +234,7 @@ class TypeChecker:
             case VarAssignable(name):
                 type_ = self.check_local_bound(name)
 
-            case PointerAssignable(argument):
+            case DerefAssignable(argument):
                 self.for_expression(argument)
 
                 if not isinstance(argument.type_, PointerType) :
