@@ -232,9 +232,14 @@ class MM:
         Special munch case for assignments
         """
         rhs_val = self.for_expression(rhs)
-        lhs_address = self.store_elem_address(lhs)
 
-        self.push_store(rhs_val, tb = lhs_address, no = 0)
+        # handle non-variable assignments separately
+        if isinstance(lhs, VarAssignable):
+            self.push("copy", rhs_val, result = self._scope[lhs.name.value])
+        else:
+            lhs_address = self.store_elem_address(lhs)
+
+            self.push_store(rhs_val, tb = lhs_address, no = 0)
 
 
     def for_expression(self, expr: Expression, force = False) -> str:
@@ -296,6 +301,7 @@ class MM:
                     self.push_load(target, address, 0)
 
                 case RefExpression(argument):
+                    print("munching a ref WHAT")
                     target = self.store_elem_address(argument)
                     
                 case _:
@@ -345,7 +351,7 @@ class MM:
                 self.push("add", target, address_shift, result = target)
 
         return target
-        
+
 
     CMP_JMP = {
         'cmp-equal'                 : 'jz',
