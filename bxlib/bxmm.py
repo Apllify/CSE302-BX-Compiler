@@ -168,7 +168,6 @@ class MM:
                 else:  
                     #the array var only stores a pointer to the real array on stack
                     array_size = type.size * MM.get_type_size(type.target)
-                    self.push("s_alloc", array_size, result = self._scope[name.value]) 
                     self.push("zero_out", f"({self._scope[name.value]}, {array_size})")
 
             case AssignStatement(lhs, rhs):
@@ -234,12 +233,13 @@ class MM:
         rhs_val = self.for_expression(rhs)
 
         # handle non-variable assignments separately
-        if isinstance(lhs, VarAssignable):
-            self.push("copy", rhs_val, result = self._scope[lhs.name.value])
-        else:
-            lhs_address = self.store_elem_address(lhs)
+        match lhs : 
+            case VarAssignable(name):
+                self.push("copy", rhs_val, result = self._scope[name.value])
+            case _ :
+                lhs_address = self.store_elem_address(lhs)
 
-            self.push_store(rhs_val, tb = lhs_address, no = 0)
+                self.push_store(rhs_val, tb = lhs_address, no = 0)
 
 
     def for_expression(self, expr: Expression, force = False) -> str:
