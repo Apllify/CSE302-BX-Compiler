@@ -108,13 +108,6 @@ class Parser:
         )
 
 
-    # def p_expression_var(self, p):
-    #     """expr : name"""
-    #     p[0] = VarExpression(
-    #         name     = p[1],
-    #         position = self._position(p)
-    #     )
-
     def p_expression_bool(self, p):
         """expr : TRUE
                 | FALSE"""
@@ -183,27 +176,6 @@ class Parser:
                 position = self._position(p),
                 )
 
-    # def p_expression_deref(self, p):
-    #     """expr : STAR expr"""
-    #     p[0] = DerefExpression(
-    #             argument=p[2],
-    #             position = self._position(p),
-    #             )
-
-    # def p_expression_ref(self, p):
-    #     """expr : AMP expr"""
-    #     p[0] = RefExpression(
-    #             argument = p[2],
-    #             position = self._position(p),
-    #             )
-
-    # def p_expression_array(self, p):
-    #     """expr : expr LSQUARE expr RSQUARE"""
-    #     p[0] = ArrayExpression(
-    #             argument = p[1],
-    #             index = p[3],
-    #             position = self._position(p),
-    #             )
 
     def p_expression_group(self, p):
         """expr : LPAREN expr RPAREN"""

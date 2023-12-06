@@ -34,7 +34,7 @@ class MM:
     @staticmethod 
     def get_type_size(type_ : Type): 
         """
-        Compute and return the size of a type (in bytes)
+        Compute and return the size of a type (IN BYTES)
         """
         size = 0
 
