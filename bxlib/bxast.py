@@ -67,10 +67,7 @@ class Name(AST):
 class Expression(AST):
     type_: Opt[Type] = dc.field(kw_only = True, default = None)
 
-# --------------------------------------------------------------------
-@dc.dataclass
-class VarExpression(Expression):
-    name: Name
+
 
 # --------------------------------------------------------------------
 @dc.dataclass
@@ -99,21 +96,6 @@ class AllocExpression(Expression):
     alloctype : Type
     size : Expression
 
-# --------------------------------------------------------------------
-@dc.dataclass
-class DerefExpression(Expression):
-    argument: Expression
-
-# --------------------------------------------------------------------
-@dc.dataclass
-class RefExpression(Expression):
-    argument: Expression
-
-# --------------------------------------------------------------------
-@dc.dataclass
-class ArrayExpression(Expression):
-    argument: Expression
-    index : Expression
 
 # --------------------------------------------------------------------
 @dc.dataclass
@@ -129,7 +111,7 @@ class PrintExpression(Expression):
 
 
 # --------------------------------------------------------------------
-class Assignable(AST):
+class Assignable(Expression):
     pass
 
 # --------------------------------------------------------------------
@@ -139,15 +121,21 @@ class VarAssignable(Assignable):
 
 # --------------------------------------------------------------------
 @dc.dataclass
-class PointerAssignable(Assignable):
-    argument : Expression
+class DerefAssignable(Assignable):
+    argument : Assignable
 
 
 # --------------------------------------------------------------------
 @dc.dataclass
 class ArrayAssignable(Assignable):
-    argument : Expression
+    argument : Assignable
     index : Expression
+
+
+# --------------------------------------------------------------------
+@dc.dataclass
+class RefExpression(Expression):
+    argument: Assignable
 
 
 # --------------------------------------------------------------------

@@ -16,16 +16,13 @@
 
 
 # Newly added commands : 
-- %t1 = load (tb, ti, ns, no)
-- store %t1, (tb, ti, ns, no)  
+## Any name preceded by a % is a temporary, anything else is a constant : 
+- %t1 = load (%tb, %ti, ns, no)
+- store %t1, (%tb, %ti, ns, no)  
 => Commands suggested by TD
-- %t1 = lea (tb, ti, ns, no)
-=> Useful for ref implementation 
 - %t1 = ref %t2   
-=> Encodes the & operator
+=> Removed by asm phase
 - %t1 = alloc %t2
 - zero_out (%tb, num_bytes)   
+- copy_array (%dest, %src, num_bytes)   
 => Refer to runtime c functions
-- %t1 = s_alloc n   
-=> Allocates known memory amount on stack (performed during tac to assembly directly)
-=> This is because our array vars should just be stack pointers
