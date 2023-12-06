@@ -17,8 +17,8 @@ void zero_out(void* address, size_t num_bytes) {
   memset(address, 0, num_bytes);
 }
 
-void* alloc(size_t num_bytes){
-  return (malloc(num_bytes));
+void* alloc(size_t block_count, size_t block_size){
+  return (calloc(block_count, block_size));
 }
 
 void* copy_array(void* dest, void* src, size_t n){

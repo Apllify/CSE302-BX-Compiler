@@ -22,7 +22,7 @@
 => Commands suggested by TD
 - %t1 = ref %t2   
 => Removed by asm phase
-- %t1 = alloc %t2
+- %t1 = alloc %t2, block_size
 - zero_out (%tb, num_bytes)   
 - copy_array (%dest, %src, num_bytes)   
 => Refer to runtime c functions

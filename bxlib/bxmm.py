@@ -110,7 +110,10 @@ class MM:
 
         self._proc.tac.append( TAC(opcode = "store", 
                                    arguments = [value_reg, args]  ) )
-
+    
+    def push_alloc(self, reg, block_count_reg: str, block_size: int):
+        self._proc.tac.append( TAC(opcode = "alloc", 
+                                   arguments = [block_count_reg, f"{block_size}"]))
 
     @cl.contextmanager
     def in_loop(self, labels: tuple[str, str]):
@@ -325,6 +328,11 @@ class MM:
                 case RefExpression(argument):
                     print("munching a ref WHAT")
                     target = self.store_elem_address(argument)
+
+                case AllocExpression(alloctype, size):
+                    target = self.fresh_temporary()
+                    size_reg = self.for_expression(size)    # munch the size and put in register.
+                    self.push_alloc(target, size_reg, self.get_type_size(alloctype))
                     
                 case _:
                     assert(False)
