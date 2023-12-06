@@ -111,9 +111,10 @@ class MM:
         self._proc.tac.append( TAC(opcode = "store", 
                                    arguments = [value_reg, args]  ) )
     
-    def push_alloc(self, reg, block_count_reg: str, block_size: int):
+    def push_alloc(self, store_reg, block_count_reg: str, block_size: int):
         self._proc.tac.append( TAC(opcode = "alloc", 
-                                   arguments = [block_count_reg, f"{block_size}"]))
+                                   result = store_reg,
+                                   arguments = [block_count_reg, block_size]))
 
     @cl.contextmanager
     def in_loop(self, labels: tuple[str, str]):
