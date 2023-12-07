@@ -26,20 +26,26 @@ class AsmGen(abc.ABC):
         
         temp_index = self._temps.get(temp)
 
-        if temp_index : 
+        if temp_index is not None: 
             return self._format_temp(temp_index)
         else:
             temp_size = self._temp_sizes.get(temp)
-            if temp_size : 
+            if temp_size is not None: 
                 prev_index = self._current_index
 
                 assert(temp_size % 8 == 0)
-                self._current_index += temp_size >> 3 #division by 8 :)
+                self._current_index += temp_size // 8 #division by 8 :)
                 
                 self._temps[temp] = prev_index
                 return self._format_temp(prev_index)
             else :
-                raise Exception("Key Error : temporary name couldn't be sized (in bxasmgen)")
+                prev_index = self._current_index
+
+                self._current_index += 1 #division by 8 :)
+                
+                self._temps[temp] = prev_index
+                return self._format_temp(prev_index)                
+                # raise Exception("Key Error : temporary name couldn't be sized (in bxasmgen)")
             
 
 
@@ -230,6 +236,33 @@ class AsmGen_x64_Linux(AsmGen):
             self._emit('movq', self._temp(ret), '%rax')
         self._emit('jmp', self._endlbl)
 
+    def _emit_load(self, tuple_, dest):
+        # if len(tuple_) == 2 : 
+        #     tb_reg, no = tuple_
+        #     self._emit("movq", f"{self._temp(tb_reg)}", '%rax')
+        #     self._emit("movq", f"(%rax)",dest)
+        # elif len(tuple_) == 4 :
+
+        # else:
+        #     raise Exception("Unrecognized load arg format")
+        pass
+        
+
+    def _emit_store():
+        pass
+
+    def _emit_ref():
+        pass
+
+    def _emit_alloc():
+        pass
+
+    def _emit_zero_out():
+        pass
+
+    def _emit_copy_array():
+        pass
+
     @classmethod
     def lower1(cls, tac: TACProc | TACVar) -> list[str]:
         emitter = cls()
@@ -245,6 +278,7 @@ class AsmGen_x64_Linux(AsmGen):
 
             case TACProc(name, arguments, ptac):
                 emitter._endlbl = f'.E_{name}'
+                emitter.set_temp_sizes(tac.temp_sizes)
 
                 for i in range(min(6, len(arguments))):
                     emitter._emit('movq', emitter.PARAMS[i], emitter._temp(arguments[i]))
@@ -256,6 +290,7 @@ class AsmGen_x64_Linux(AsmGen):
                     emitter(instr)
 
                 nvars  = len(emitter._temps)
+
                 nvars += nvars & 1
 
                 return [

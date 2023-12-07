@@ -80,37 +80,8 @@ class MM:
     def push_label(self, label: str):
         self._proc.tac.append(f'{label}:')
 
-    def push_load(self, store_reg : str, 
-                        tb : str, 
-                        no : int,
-                        ti : Opt[str] = None, 
-                        ns : Opt[int] = None, ):
 
-        #tuple can either be length 2 or length 4
-        if ti : 
-            args = f"({tb}, {ti}, {ns}, {no})"
-        else : 
-            args = f"({tb}, {no})"
 
-        self._proc.tac.append( TAC(opcode = "load", 
-                                   result = store_reg, 
-                                   arguments = [args]  ) )
-
-    def push_store(self, value_reg : str, 
-                         tb : str, 
-                         no : int,
-                         ti : Opt[str] = None, 
-                         ns : Opt[int] = None, ) : 
-
-        #tuple can either be length 2 or length 4
-        if ti : 
-            args = f"({tb}, {ti}, {ns}, {no})"
-        else : 
-            args = f"({tb}, {no})"
-
-        self._proc.tac.append( TAC(opcode = "store", 
-                                   arguments = [value_reg, args]  ) )
-    
     def push_alloc(self, store_reg, block_count_reg: str, block_size: int):
         self._proc.tac.append( TAC(opcode = "alloc", 
                                    result = store_reg,
@@ -269,7 +240,7 @@ class MM:
             case _ :
                 lhs_address = self.store_elem_address(lhs)
 
-                self.push_store(rhs_val, tb = lhs_address, no = 0)
+                self.push("store", rhs_val, lhs_address)
 
 
     def for_expression(self, expr: Expression, force = False) -> str:
@@ -323,12 +294,12 @@ class MM:
                     address = self.for_expression(argument)
                     target = self.fresh_temporary()
 
-                    self.push_load(target, tb = address, no = 0)
+                    self.push("load", address, result = target)
 
                 case ArrayAssignable(_, _):
                     address = self.store_elem_address(expr)
                     target = self.fresh_temporary()
-                    self.push_load(target, address, 0)
+                    self.push("load", address, result = target)
 
                 case RefExpression(argument):
                     print("munching a ref WHAT")
@@ -376,7 +347,6 @@ class MM:
                         
                     case ArrayType(target = sub_target, size = sub_size):
                         base_address = self.store_elem_address(sub_arg)
-
                 total_shift = self.fresh_temporary()
                 elem_size_reg = self.fresh_temporary()
                 target = self.fresh_temporary() 
