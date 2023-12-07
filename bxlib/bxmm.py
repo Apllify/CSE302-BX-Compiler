@@ -164,7 +164,11 @@ class MM:
     def for_statement(self, stmt: Statement):
         match stmt:
             case VarDeclStatement(name, init, type):
-                self._scope.push(name.value, self.fresh_temporary())
+                new_temp = self.fresh_temporary()
+                self._scope.push(name.value, new_temp)
+
+                assert(self._proc is not None)
+                self._proc.add_temp_size(new_temp, MM.get_type_size(type))
 
                 if not isinstance(type, ArrayType):
                     temp = self.for_expression(init)

@@ -10,15 +10,38 @@ class AsmGen(abc.ABC):
     def __init__(self):
         self._tparams = dict()
         self._temps   = dict()
+        self._current_index = 0 #represents the byte size of the stack divided by 8
+        self._temp_sizes : dict[str, int] = dict() 
+
         self._asm     = []
+
+    def set_temp_sizes(self, temp_sizes : dict[str, int]):
+        self._temp_sizes = temp_sizes
 
     def _temp(self, temp):
         if temp.startswith('@'):
             return self._format_temp(temp[1:])
         if temp in self._tparams:
             return self._format_param(self._tparams[temp])
-        index = self._temps.setdefault(temp, len(self._temps))
-        return self._format_temp(index)
+        
+        temp_index = self._temps.get(temp)
+
+        if temp_index : 
+            return self._format_temp(temp_index)
+        else:
+            temp_size = self._temp_sizes.get(temp)
+            if temp_size : 
+                prev_index = self._current_index
+
+                assert(temp_size % 8 == 0)
+                self._current_index += temp_size >> 3 #division by 8 :)
+                
+                self._temps[temp] = prev_index
+                return self._format_temp(prev_index)
+            else :
+                raise Exception("Key Error : temporary name couldn't be sized (in bxasmgen)")
+            
+
 
     @abc.abstractmethod
     def _format_temp(self, index):

@@ -51,6 +51,16 @@ class TACProc:
         self.name      = name
         self.arguments = arguments
         self.tac       = []
+        self.temp_sizes = dict()
+
+    def add_temp_size(self, temp_name : str, bytesize : int):
+        self.temp_sizes[temp_name] = bytesize
+
+    # def get_temp_size(self, temp_name : str):
+    #     if (temp_size := self.temp_sizes.get(temp_name)) : 
+    #         return temp_size 
+    #     else : 
+    #         raise KeyError("Unrecognized temporary name in assembly phase")
 
     def __repr__(self):
         aout = f"proc @{self.name}"
