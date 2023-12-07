@@ -250,22 +250,24 @@ class TypeChecker:
                 self.for_expression(argument)
                 self.for_expression(index, BasicType.INT)
 
-                if not isinstance(argument.type_, ArrayType):
+                correct_type = (isinstance(argument.type_, ArrayType) or 
+                                isinstance(argument.type_, PointerType)) 
+                if not correct_type:
                     self.report(
-                        'cannot index non-array value',
+                        'can only index pointers and arrays',
                         position = assign.position,
                     )
 
-                #check index within bounds
-                match index : 
-                    case IntExpression(value):
-                        if value not in range(0, argument.type_.size):
-                            self.report(
-                                'illegal array index',
-                                position = assign.position
-                            )
-                    case _ :
-                        pass
+                #check index within bounds for constant indexes
+                if isinstance(argument.type_, ArrayType):
+                    match index : 
+                        case IntExpression(value):
+                            if value not in range(0, argument.type_.size):
+                                self.report(
+                                    'illegal array index',
+                                    position = assign.position
+                                )
+
 
                 type_ = argument.type_.target
 
