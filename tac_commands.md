@@ -16,9 +16,9 @@
 
 
 # Newly added commands : 
-### NB : Any name preceded by a % is a temporary, anything else is a constant
-- %t1 = load (%tb, %ti, ns, no) / load (%tb, no)
-- store %t1, (%tb, %ti, ns, no) / store %t1 (%tb, no)    
+## Any name preceded by a % is a temporary, anything else is a constant : 
+- %t1 = load %tb
+- store %t1, %tb 
 => Commands suggested by TD
 - %t1 = ref %t2   
 => Removed by asm phase
