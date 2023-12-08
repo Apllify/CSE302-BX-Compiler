@@ -237,7 +237,7 @@ class AsmGen_x64_Linux(AsmGen):
     def _emit_store(self, value_temp, address_temp):
         self._emit("movq", self._temp(value_temp), "%rax")
         self._emit("movq", self._temp(address_temp), "%rbx")
-        self._emit("movq", "%rbx", f"(%rax)")
+        self._emit("movq", "%rax", f"(%rbx)")
 
     def _emit_ref(self, refed, dest):
         #store the address of the referenced temp in dest

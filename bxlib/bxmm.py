@@ -353,7 +353,7 @@ class MM:
                 self.push("const", elem_size, result = elem_size_reg)
                 self.push("mul", address_shift, elem_size_reg, result = total_shift)
                 self.push("copy", base_address, result = target)
-                self.push("add", target, address_shift, result = target)
+                self.push("add", target, total_shift, result = target)
 
         return target
 
