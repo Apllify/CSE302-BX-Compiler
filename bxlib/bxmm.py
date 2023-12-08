@@ -302,7 +302,6 @@ class MM:
                     self.push("load", address, result = target)
 
                 case RefExpression(argument):
-                    print("munching a ref WHAT")
                     target = self.store_elem_address(argument)
 
                 case AllocExpression(alloctype, size):

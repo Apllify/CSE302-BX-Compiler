@@ -238,7 +238,8 @@ class AsmGen_x64_Linux(AsmGen):
 
     def _emit_load(self, address_temp, dest):
         self._emit("movq", self._temp(address_temp), '%rax')
-        self._emit("movq", f"(%rax)", self._temp(dest) )
+        self._emit("movq", f"(%rax)", "%rbx")
+        self._emit("movq", "%rbx", self._temp(dest))
         
     def _emit_store(self, value_temp, address_temp):
         self._emit("movq", self._temp(value_temp), "%rax")
@@ -247,7 +248,8 @@ class AsmGen_x64_Linux(AsmGen):
 
     def _emit_ref(self, refed, dest):
         #store the address of the referenced temp in dest
-        self._emit("leaq", self._temp(refed), self._temp(dest))
+        self._emit("leaq", self._temp(refed), "%rax")
+        self._emit("movq", "%rax", self._temp(dest))
 
     def _emit_alloc(self, bcount : str, bsize : int, dest):
         #use runtime malloc

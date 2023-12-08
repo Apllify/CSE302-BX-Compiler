@@ -1,0 +1,7 @@
+def main(){
+    var a = 5 : int;
+    var b = &a : int*;
+    *b = 66;
+
+    print(5);
+}
