@@ -213,7 +213,7 @@ class MM:
         assert(isinstance(lhs.type_, ArrayType) and isinstance(rhs.type_, ArrayType))
         assert(lhs.type_.size == rhs.type_.size)
 
-        mem_size = lhs.type_.size
+        mem_size = MM.get_type_size(lhs.type_)
         lhs_address = self.store_elem_address(lhs)
         rhs_address = self.store_elem_address(rhs)
 

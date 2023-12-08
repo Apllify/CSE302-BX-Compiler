@@ -222,28 +222,22 @@ class Parser:
                        | exprs_comma_1"""
         p[0] = [] if len(p) == 1 else p[1]
 
-    def p_assignable(self, p):
-        """assignable : var_assignable
-                      | point_assignable
-                      | array_assignable"""
-        p[0] = p[1]
-
     def p_assignable_var(self, p):
-        """var_assignable : name"""
+        """assignable : name"""
         p[0] = VarAssignable(
                 name = p[1],
                 position = self._position(p),
                 )
 
     def p_assignable_point(self, p):
-        """point_assignable : STAR expr"""
+        """assignable : STAR expr"""
         p[0] = DerefAssignable(
                 argument = p[2],
                 position = self._position(p),
                 )
     
     def p_assignable_array(self, p):
-        """array_assignable : expr LSQUARE expr RSQUARE"""
+        """assignable : expr LSQUARE expr RSQUARE"""
         p[0] = ArrayAssignable(
                 argument = p[1],
                 index = p[3],

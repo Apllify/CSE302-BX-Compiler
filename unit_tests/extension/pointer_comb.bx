@@ -1,5 +1,6 @@
 def main(){
-    var a = 0 : int[3];
-    a[1] = 5;
-    print(a[1]);
+    var p = null : int*;
+    p = alloc int[3];
+
+    print(p[0]);
 }
