@@ -140,10 +140,6 @@ class TypeChecker:
         type_ = None
 
         match expr:
-            # case VarExpression(name):
-            #     if self.check_local_bound(name):
-            #         type_ = self.scope[name.value]
-
             case BoolExpression(_):
                 type_ = BasicType.BOOL
 
@@ -203,6 +199,11 @@ class TypeChecker:
                 self.for_expression(size, BasicType.INT)
 
                 type_ = PointerType(alloctype)
+
+            case RefExpression(argument):
+                self.for_expression(argument)
+                assert(argument.type_ != None)
+                type_ = PointerType(argument.type_)
 
 
             case Assignable():
@@ -264,7 +265,7 @@ class TypeChecker:
                         case IntExpression(value):
                             if value not in range(0, argument.type_.size):
                                 self.report(
-                                    'illegal array index',
+                                    'array index out of bounds',
                                     position = assign.position
                                 )
 

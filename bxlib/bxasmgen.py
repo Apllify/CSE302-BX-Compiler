@@ -10,15 +10,37 @@ class AsmGen(abc.ABC):
     def __init__(self):
         self._tparams = dict()
         self._temps   = dict()
+        self._current_index = 0 #represents the byte size of the stack divided by 8
+        self._temp_sizes : dict[str, int] = dict() 
+
         self._asm     = []
+
+    def set_temp_sizes(self, temp_sizes : dict[str, int]):
+        self._temp_sizes = temp_sizes
 
     def _temp(self, temp):
         if temp.startswith('@'):
             return self._format_temp(temp[1:])
         if temp in self._tparams:
             return self._format_param(self._tparams[temp])
-        index = self._temps.setdefault(temp, len(self._temps))
-        return self._format_temp(index)
+        
+        temp_index = self._temps.get(temp)
+
+        if temp_index is not None: 
+            return self._format_temp(temp_index)
+        else:
+            temp_size = self._temp_sizes.get(temp)
+            if temp_size is not None: 
+                assert(temp_size % 8 == 0)
+                self._current_index += temp_size // 8 #division by 8 :)
+            else :
+                self._current_index += 1
+                
+            self._temps[temp] = self._current_index - 1
+            return self._format_temp(self._current_index - 1)                
+            # raise Exception("Key Error : temporary name couldn't be sized (in bxasmgen)")
+            
+
 
     @abc.abstractmethod
     def _format_temp(self, index):
@@ -207,6 +229,44 @@ class AsmGen_x64_Linux(AsmGen):
             self._emit('movq', self._temp(ret), '%rax')
         self._emit('jmp', self._endlbl)
 
+    def _emit_load(self, address_temp, dest):
+        self._emit("movq", self._temp(address_temp), '%rax')
+        self._emit("movq", f"(%rax)", "%rbx")
+        self._emit("movq", "%rbx", self._temp(dest))
+        
+    def _emit_store(self, value_temp, address_temp):
+        self._emit("movq", self._temp(value_temp), "%rax")
+        self._emit("movq", self._temp(address_temp), "%rbx")
+        self._emit("movq", "%rax", f"(%rbx)")
+
+    def _emit_ref(self, refed, dest):
+        #store the address of the referenced temp in dest
+        self._emit("leaq", self._temp(refed), "%rax")
+        self._emit("movq", "%rax", self._temp(dest))
+
+    def _emit_alloc(self, bcount : str, bsize : int, dest):
+        #use runtime malloc
+        self._emit('xorq', '%rax', '%rax')
+        self._emit("movq", self._temp(bcount), "%rdi")
+        self._emit("movq", f"${bsize}", "%rsi")
+        self._emit("callq", "alloc")
+        self._emit("movq", "%rax", self._temp(dest))
+
+
+    def _emit_zero_out(self, address_temp : str, nbytes : int):
+        self._emit("xorq", "%rax", "%rax")
+        self._emit("movq", self._temp(address_temp), "%rdi")
+        self._emit("movq", f"${nbytes}", "%rsi")
+        self._emit("callq", "zero_out")
+
+    def _emit_copy_array(self, dest : str, src : str, nbytes : int):
+        self._emit("xorq", "%rax", "%rax")
+        self._emit("movq", self._temp(dest), "%rdi")
+        self._emit("movq", self._temp(src), "%rsi")
+        self._emit("movq", f"${nbytes}", "%rdx")
+        self._emit("callq", "copy_array")
+
+    
     @classmethod
     def lower1(cls, tac: TACProc | TACVar) -> list[str]:
         emitter = cls()
@@ -222,6 +282,7 @@ class AsmGen_x64_Linux(AsmGen):
 
             case TACProc(name, arguments, ptac):
                 emitter._endlbl = f'.E_{name}'
+                emitter.set_temp_sizes(tac.temp_sizes)
 
                 for i in range(min(6, len(arguments))):
                     emitter._emit('movq', emitter.PARAMS[i], emitter._temp(arguments[i]))
@@ -233,6 +294,7 @@ class AsmGen_x64_Linux(AsmGen):
                     emitter(instr)
 
                 nvars  = len(emitter._temps)
+
                 nvars += nvars & 1
 
                 return [

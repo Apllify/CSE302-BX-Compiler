@@ -8,4 +8,7 @@ def main(){
 
     p4 = null;
     p5 = null;
+
+    print(500);
+    print(400);
 }

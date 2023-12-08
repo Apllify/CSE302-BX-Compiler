@@ -167,13 +167,15 @@ class Parser:
             position  = self._position(p),
         )
 
-    def p_expression_alloc(self, p):
-        """expr : ALLOC type LSQUARE expr RSQUARE"""
-        p[0] = AllocExpression(
-                alloctype = p[2],
-                size = p[4],
-                position = self._position(p),
-                )
+
+
+
+    def p_expression_ref(self, p):
+        """expr : AMP assignable"""
+        p[0] = RefExpression(
+            argument = p[2],
+            position = self._position(p)
+        )
 
 
     def p_expression_group(self, p):
@@ -200,6 +202,27 @@ class Parser:
         p[0] = p[1]
 
 
+    def p_expression_alloc(self, p):
+        """expr : ALLOC type""" 
+
+        #parse the alloc argument as a single type, then extract qt from it 
+        assert(isinstance(p[2], ArrayType))
+        p[0] = AllocExpression(
+                alloctype = p[2].target,
+                size = IntExpression(p[2].size),
+                position = self._position(p),
+                )
+
+    def p_expression_alloc_b(self, p):
+        """expr : ALLOC type LSQUARE expr RSQUARE"""
+
+        #important to allow expressions as alloc arg
+        p[0] = AllocExpression(
+            alloctype = p[2],
+            size = p[4],
+            position = self._position(p)
+        )
+
     def p_exprs_comma_1(self, p):
         """exprs_comma_1 : expr
                         | exprs_comma_1 COMMA expr"""
@@ -214,28 +237,22 @@ class Parser:
                        | exprs_comma_1"""
         p[0] = [] if len(p) == 1 else p[1]
 
-    def p_assignable(self, p):
-        """assignable : var_assignable
-                      | point_assignable
-                      | array_assignable"""
-        p[0] = p[1]
-
     def p_assignable_var(self, p):
-        """var_assignable : name"""
+        """assignable : name"""
         p[0] = VarAssignable(
                 name = p[1],
                 position = self._position(p),
                 )
 
     def p_assignable_point(self, p):
-        """point_assignable : STAR expr"""
+        """assignable : STAR expr"""
         p[0] = DerefAssignable(
                 argument = p[2],
                 position = self._position(p),
                 )
     
     def p_assignable_array(self, p):
-        """array_assignable : expr LSQUARE expr RSQUARE"""
+        """assignable : expr LSQUARE expr RSQUARE"""
         p[0] = ArrayAssignable(
                 argument = p[1],
                 index = p[3],

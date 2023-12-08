@@ -39,8 +39,8 @@ class Lexer:
         'RPAREN'   ,
         'LBRACE'   ,
         'RBRACE'   ,
-        'LSQUARE',
-        'RSQUARE',
+        'LSQUARE'  ,
+        'RSQUARE'  ,
         'COLON'    ,
         'SEMICOLON',
         'COMMA'    ,
@@ -72,6 +72,8 @@ class Lexer:
     t_RPAREN    = re.escape(')')
     t_LBRACE    = re.escape('{')
     t_RBRACE    = re.escape('}')
+    t_LSQUARE   = re.escape('[')
+    t_RSQUARE   = re.escape(']')
     t_COLON     = re.escape(':')
     t_SEMICOLON = re.escape(';')
     t_COMMA     = re.escape(',')

@@ -80,37 +80,8 @@ class MM:
     def push_label(self, label: str):
         self._proc.tac.append(f'{label}:')
 
-    def push_load(self, store_reg : str, 
-                        tb : str, 
-                        no : int,
-                        ti : Opt[str] = None, 
-                        ns : Opt[int] = None, ):
 
-        #tuple can either be length 2 or length 4
-        if ti : 
-            args = f"({tb}, {ti}, {ns}, {no})"
-        else : 
-            args = f"({tb}, {no})"
 
-        self._proc.tac.append( TAC(opcode = "load", 
-                                   result = store_reg, 
-                                   arguments = [args]  ) )
-
-    def push_store(self, value_reg : str, 
-                         tb : str, 
-                         no : int,
-                         ti : Opt[str] = None, 
-                         ns : Opt[int] = None, ) : 
-
-        #tuple can either be length 2 or length 4
-        if ti : 
-            args = f"({tb}, {ti}, {ns}, {no})"
-        else : 
-            args = f"({tb}, {no})"
-
-        self._proc.tac.append( TAC(opcode = "store", 
-                                   arguments = [value_reg, args]  ) )
-    
     def push_alloc(self, store_reg, block_count_reg: str, block_size: int):
         self._proc.tac.append( TAC(opcode = "alloc", 
                                    result = store_reg,
@@ -164,15 +135,20 @@ class MM:
     def for_statement(self, stmt: Statement):
         match stmt:
             case VarDeclStatement(name, init, type):
-                self._scope.push(name.value, self.fresh_temporary())
+                new_temp = self.fresh_temporary()
+                self._scope.push(name.value, new_temp)
+
+                assert(self._proc is not None)
+                self._proc.add_temp_size(new_temp, MM.get_type_size(type))
 
                 if not isinstance(type, ArrayType):
                     temp = self.for_expression(init)
                     self.push('copy', temp, result = self._scope[name.value])
                 else:  
-                    #the array var only stores a pointer to the real array on stack
+                    array_address = self.fresh_temporary()
+                    self.push("ref", self._scope[name.value], result= array_address)
                     array_size = type.size * MM.get_type_size(type.target)
-                    self.push("zero_out", f"({self._scope[name.value]}, {array_size})")
+                    self.push("zero_out", array_address, array_size)
 
             case AssignStatement(lhs, rhs):
                 self.for_assignment(lhs, rhs)
@@ -237,11 +213,11 @@ class MM:
         assert(isinstance(lhs.type_, ArrayType) and isinstance(rhs.type_, ArrayType))
         assert(lhs.type_.size == rhs.type_.size)
 
-        mem_size = lhs.type_.size
+        mem_size = MM.get_type_size(lhs.type_)
         lhs_address = self.store_elem_address(lhs)
         rhs_address = self.store_elem_address(rhs)
 
-        self.push("copy_array", f"({lhs_address}, {rhs_address}, {mem_size})")
+        self.push("copy_array", lhs_address, rhs_address, mem_size)
         
 
 
@@ -265,7 +241,7 @@ class MM:
             case _ :
                 lhs_address = self.store_elem_address(lhs)
 
-                self.push_store(rhs_val, tb = lhs_address, no = 0)
+                self.push("store", rhs_val, lhs_address)
 
 
     def for_expression(self, expr: Expression, force = False) -> str:
@@ -319,15 +295,14 @@ class MM:
                     address = self.for_expression(argument)
                     target = self.fresh_temporary()
 
-                    self.push_load(target, tb = address, no = 0)
+                    self.push("load", address, result = target)
 
                 case ArrayAssignable(_, _):
                     address = self.store_elem_address(expr)
                     target = self.fresh_temporary()
-                    self.push_load(target, address, 0)
+                    self.push("load", address, result = target)
 
                 case RefExpression(argument):
-                    print("munching a ref WHAT")
                     target = self.store_elem_address(argument)
 
                 case AllocExpression(alloctype, size):
@@ -372,14 +347,13 @@ class MM:
                         
                     case ArrayType(target = sub_target, size = sub_size):
                         base_address = self.store_elem_address(sub_arg)
-
                 total_shift = self.fresh_temporary()
                 elem_size_reg = self.fresh_temporary()
                 target = self.fresh_temporary() 
                 self.push("const", elem_size, result = elem_size_reg)
                 self.push("mul", address_shift, elem_size_reg, result = total_shift)
                 self.push("copy", base_address, result = target)
-                self.push("add", target, address_shift, result = target)
+                self.push("add", target, total_shift, result = target)
 
         return target
 
