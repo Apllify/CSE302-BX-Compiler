@@ -29,16 +29,17 @@ class AsmGen(abc.ABC):
         if temp_index is not None: 
             return self._format_temp(temp_index)
         else:
+            
             temp_size = self._temp_sizes.get(temp)
             if temp_size is not None: 
                 assert(temp_size % 8 == 0)
-                self._current_index += temp_size // 8 #division by 8 :)
+                self._current_index += temp_size >> 3 #division by 8 :)
             else :
+                #any non-var temp HAS to be 8 bytes
                 self._current_index += 1
                 
             self._temps[temp] = self._current_index - 1
             return self._format_temp(self._current_index - 1)                
-            # raise Exception("Key Error : temporary name couldn't be sized (in bxasmgen)")
             
 
 

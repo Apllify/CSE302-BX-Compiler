@@ -36,16 +36,12 @@ class MM:
         """
         Compute and return the size of a type (IN BYTES)
         """
+        if type_ in (BasicType.INT, BasicType.BOOL, BasicType.NULL):
+            return 8
+
         size = 0
 
         match type_ : 
-            case BasicType.INT : 
-                size = 8
-            case BasicType.BOOL : 
-                size = 8
-            case BasicType.NULL : 
-                size = 8
-
             case PointerType(target):
                 size = 8
 
@@ -79,13 +75,6 @@ class MM:
 
     def push_label(self, label: str):
         self._proc.tac.append(f'{label}:')
-
-
-
-    def push_alloc(self, store_reg, block_count_reg: str, block_size: int):
-        self._proc.tac.append( TAC(opcode = "alloc", 
-                                   result = store_reg,
-                                   arguments = [block_count_reg, block_size]))
 
     @cl.contextmanager
     def in_loop(self, labels: tuple[str, str]):
@@ -138,6 +127,7 @@ class MM:
                 new_temp = self.fresh_temporary()
                 self._scope.push(name.value, new_temp)
 
+                #store temp size for the asm phase
                 assert(self._proc is not None)
                 self._proc.add_temp_size(new_temp, MM.get_type_size(type))
 
@@ -236,9 +226,9 @@ class MM:
 
         # handle non-variable assignments separately
         match lhs : 
-            case VarAssignable(name):
+            case VarAssignable(name) :
                 self.push("copy", rhs_val, result = self._scope[name.value])
-            case _ :
+            case _ :    
                 lhs_address = self.store_elem_address(lhs)
 
                 self.push("store", rhs_val, lhs_address)
@@ -307,8 +297,8 @@ class MM:
 
                 case AllocExpression(alloctype, size):
                     target = self.fresh_temporary()
-                    size_reg = self.for_expression(size)    # munch the size and put in register.
-                    self.push_alloc(target, size_reg, self.get_type_size(alloctype))
+                    bcount_reg = self.for_expression(size)    # munch the number of blocks and store
+                    self.push("alloc", bcount_reg, MM.get_type_size(alloctype), result = target)
                     
                 case _:
                     assert(False)
@@ -337,23 +327,25 @@ class MM:
 
                 assert(isinstance(sub_arg.type_, ArrayType) or isinstance(sub_arg.type_, PointerType) )
 
-                address_shift = self.for_expression(index)
+                shift_reg = self.for_expression(index)
                 elem_size = MM.get_type_size(sub_arg.type_.target)
 
                 #iterate over type of sub_arg
                 match sub_arg.type_:
-                    case PointerType(target = sub_target) :
-                        base_address = self.for_expression(sub_arg)
+                    case PointerType(_) :
+                        address_reg = self.for_expression(sub_arg)
                         
-                    case ArrayType(target = sub_target, size = sub_size):
-                        base_address = self.store_elem_address(sub_arg)
-                total_shift = self.fresh_temporary()
-                elem_size_reg = self.fresh_temporary()
-                target = self.fresh_temporary() 
-                self.push("const", elem_size, result = elem_size_reg)
-                self.push("mul", address_shift, elem_size_reg, result = total_shift)
-                self.push("copy", base_address, result = target)
-                self.push("add", target, total_shift, result = target)
+                    case ArrayType(_, _):
+                        address_reg = self.store_elem_address(sub_arg)
+
+                #bit ugly but does the job
+                bsize_reg = self.fresh_temporary()
+                self.push("const", elem_size, bsize_reg)
+
+                self.push("mul", shift_reg, bsize_reg, result = shift_reg)
+                self.push("add",  address_reg, shift_reg, result = address_reg)
+
+                target = address_reg
 
         return target
 

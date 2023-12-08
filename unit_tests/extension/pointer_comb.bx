@@ -2,5 +2,18 @@ def main(){
     var x = alloc int[10][1] : int[10]*;
     var y = alloc int[10][20] : int[10]*;
 
+    var a = 0 : int[3];
+
+    a[0] = 6;
+    a[1] = 89897;
+    a[2] = 1615;
+
+    var b = 0 : int[3];
+    b = a;
+
+    x[0][0] = 9;
+
     print(x[0][0]);
+    print(a[2]);
+    print(a[1]);
 }

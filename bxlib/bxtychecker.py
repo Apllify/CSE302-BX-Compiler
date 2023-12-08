@@ -202,7 +202,13 @@ class TypeChecker:
 
             case RefExpression(argument):
                 self.for_expression(argument)
-                assert(argument.type_ != None)
+
+                if argument.type_ == BasicType.NULL:
+                    self.report(
+                        "Cannot reference null pointer",
+                        position = argument.position
+                    )
+
                 type_ = PointerType(argument.type_)
 
 
