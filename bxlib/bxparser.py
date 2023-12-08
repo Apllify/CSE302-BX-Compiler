@@ -284,7 +284,13 @@ class Parser:
                 index = p[3],
                 position = self._position(p),
                 )
-        
+
+    def p_assignable_attribute(self, p):
+        """assignable : assignable PERIOD IDENT"""
+        p[0] = AttributeAssignable(
+            argument = p[1],
+            attribute = p[3],
+        )
 
     def p_stmt_vardecl(self, p):
         """stmt : VAR name EQ expr COLON type SEMICOLON"""

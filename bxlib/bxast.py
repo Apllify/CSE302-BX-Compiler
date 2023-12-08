@@ -56,11 +56,8 @@ class StructType(Type):
 
 @dc.dataclass 
 class TypeStandin(Type):
-    #set in parser
     type_name : str
 
-    #set during type check
-    original_type : Opt[Type] = dc.field(kw_only = True, default = None)
 
 # --------------------------------------------------------------------
 @dc.dataclass
@@ -150,6 +147,12 @@ class DerefAssignable(Assignable):
 class ArrayAssignable(Assignable):
     argument : Assignable
     index : Expression
+
+# --------------------------------------------------------------------
+@dc.dataclass
+class AttributeAssignable(Assignable):
+    argument : Assignable
+    attribute : str
 
 
 # --------------------------------------------------------------------

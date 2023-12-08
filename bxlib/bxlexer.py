@@ -46,6 +46,7 @@ class Lexer:
         'COLON'    ,
         'SEMICOLON',
         'COMMA'    ,
+        'PERIOD'   ,
 
         'AMP'      ,
         'AMPAMP'   ,
@@ -79,6 +80,7 @@ class Lexer:
     t_COLON     = re.escape(':')
     t_SEMICOLON = re.escape(';')
     t_COMMA     = re.escape(',')
+    t_PERIOD    = re.escape('.')
 
     t_AMP       = re.escape('&')
     t_AMPAMP    = re.escape('&&')
