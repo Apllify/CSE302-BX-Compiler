@@ -44,6 +44,24 @@ class ArrayType(Type):
     def __str__(self):
         return f"{self.target}[{self.size}]"
 
+@dc.dataclass
+class StructType(Type):
+    #set in parser
+    attributes : list[tuple[str, Type]]
+
+    #set during type check
+    attr_offsets : Opt[dict[str, int]] = dc.field(kw_only = True, default = None)
+    size : Opt[int] = dc.field(kw_only = True, default = None)
+
+
+@dc.dataclass 
+class TypeStandin(Type):
+    #set in parser
+    type_name : str
+
+    #set during type check
+    original_type : Opt[Type] = dc.field(kw_only = True, default = None)
+
 # --------------------------------------------------------------------
 @dc.dataclass
 class Range:
@@ -220,6 +238,12 @@ class ProcDecl(TopDecl):
     arguments: list[tuple[Name, Type]]
     rettype: Opt[Type]
     body: Statement
+
+#--------------------------------------------------------------------
+@dc.dataclass
+class TypeAbbrevDecl(TopDecl):
+    alias : str
+    original_type : Type
 
 # --------------------------------------------------------------------
 Block   = list[Statement]

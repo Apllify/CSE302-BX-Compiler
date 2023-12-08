@@ -106,6 +106,30 @@ class Parser:
             size = p[3]
         )
 
+    def p_type_struct(self, p):
+        """type : STRUCT LBRACE s_field s_field_rest RBRACE"""
+        p[0] = StructType(
+            attributes = [p[2]] + p[3],
+            )
+
+    def p_s_field(self, p):
+        """s_field : IDENT COLON type"""
+        p[0] = (p[1], p[3])
+
+    def p_s_field_rest(self, p):
+        """s_field_rest :
+                        | COMMA s_field s_field_rest"""
+        if len(p) == 1:
+            p[0] = [()]
+        else:
+            p[0] = [p[2]] + p[3]
+
+    def p_type_standin(self, p):
+        """type : IDENT"""
+        p[0] = TypeStandin(
+            type_name = p[1]
+        )
+
 
     def p_expression_bool(self, p):
         """expr : TRUE
@@ -403,9 +427,18 @@ class Parser:
             position = self._position(p),
         )
 
+    def p_typeabbrevdecl(self, p):
+        """typeabbrevdecl : TYPE IDENT EQ type SEMICOLON"""
+        p[0] = TypeAbbrevDecl(
+            alias = p[2],
+            original_type = p[4],
+            position = self._position(p),
+        )
+
     def p_topdecl(self, p):
         """topdecl : procdecl
-                   | globvardecl"""
+                   | globvardecl
+                   | typeabbrevdecl"""
         p[0] = p[1]
 
     def p_program(self, p):

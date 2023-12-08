@@ -24,7 +24,9 @@ class Lexer:
             'null'    ,
             'print'   ,
             'return'  ,
+            'struct'  ,
             'true'    ,
+            'type'    ,
             'var'     ,
             'while'   ,
         )
