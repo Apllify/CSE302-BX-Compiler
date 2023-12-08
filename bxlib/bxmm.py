@@ -147,7 +147,7 @@ class MM:
                 else:  
                     #the array var only stores a pointer to the real array on stack
                     array_size = type.size * MM.get_type_size(type.target)
-                    self.push("zero_out", f"({self._scope[name.value]}, {array_size})")
+                    self.push("zero_out", self._scope[name.value], array_size)
 
             case AssignStatement(lhs, rhs):
                 self.for_assignment(lhs, rhs)
@@ -216,7 +216,7 @@ class MM:
         lhs_address = self.store_elem_address(lhs)
         rhs_address = self.store_elem_address(rhs)
 
-        self.push("copy_array", f"({lhs_address}, {rhs_address}, {mem_size})")
+        self.push("copy_array", lhs_address, rhs_address, mem_size)
         
 
 
