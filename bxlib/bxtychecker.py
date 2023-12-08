@@ -265,7 +265,7 @@ class TypeChecker:
                         case IntExpression(value):
                             if value not in range(0, argument.type_.size):
                                 self.report(
-                                    'illegal array index',
+                                    'array index out of bounds',
                                     position = assign.position
                                 )
 

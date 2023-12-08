@@ -145,9 +145,10 @@ class MM:
                     temp = self.for_expression(init)
                     self.push('copy', temp, result = self._scope[name.value])
                 else:  
-                    #the array var only stores a pointer to the real array on stack
+                    array_address = self.fresh_temporary()
+                    self.push("ref", self._scope[name.value], result= array_address)
                     array_size = type.size * MM.get_type_size(type.target)
-                    self.push("zero_out", self._scope[name.value], array_size)
+                    self.push("zero_out", array_address, array_size)
 
             case AssignStatement(lhs, rhs):
                 self.for_assignment(lhs, rhs)

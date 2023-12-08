@@ -31,21 +31,14 @@ class AsmGen(abc.ABC):
         else:
             temp_size = self._temp_sizes.get(temp)
             if temp_size is not None: 
-                prev_index = self._current_index
-
                 assert(temp_size % 8 == 0)
                 self._current_index += temp_size // 8 #division by 8 :)
-                
-                self._temps[temp] = prev_index
-                return self._format_temp(prev_index)
             else :
-                prev_index = self._current_index
-
-                self._current_index += 1 #division by 8 :)
+                self._current_index += 1
                 
-                self._temps[temp] = prev_index
-                return self._format_temp(prev_index)                
-                # raise Exception("Key Error : temporary name couldn't be sized (in bxasmgen)")
+            self._temps[temp] = self._current_index - 1
+            return self._format_temp(self._current_index - 1)                
+            # raise Exception("Key Error : temporary name couldn't be sized (in bxasmgen)")
             
 
 
