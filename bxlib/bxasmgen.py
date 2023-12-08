@@ -258,12 +258,20 @@ class AsmGen_x64_Linux(AsmGen):
         self._emit("movq", "%rax", self._temp(dest))
 
 
-    def _emit_zero_out():
-        pass
+    def _emit_zero_out(self, address_temp : str, nbytes : int):
+        self._emit("xorq", "%rax", "%rax")
+        self._emit("movq", self._temp(address_temp), "%rdi")
+        self._emit("movq", f"${nbytes}", "%rsi")
+        self._emit("callq", "zero_out")
 
-    def _emit_copy_array():
-        pass
+    def _emit_copy_array(self, dest : str, src : str, nbytes : int):
+        self._emit("xorq", "%rax", "%rax")
+        self._emit("movq", self._temp(dest), "%rdi")
+        self._emit("movq", self._temp(src), "%rsi")
+        self._emit("movq", f"${nbytes}", "%rdx")
+        self._emit("callq", "copy_array")
 
+    
     @classmethod
     def lower1(cls, tac: TACProc | TACVar) -> list[str]:
         emitter = cls()
