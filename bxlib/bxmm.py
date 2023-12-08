@@ -145,9 +145,10 @@ class MM:
                     temp = self.for_expression(init)
                     self.push('copy', temp, result = self._scope[name.value])
                 else:  
-                    #the array var only stores a pointer to the real array on stack
+                    array_address = self.fresh_temporary()
+                    self.push("ref", self._scope[name.value], result= array_address)
                     array_size = type.size * MM.get_type_size(type.target)
-                    self.push("zero_out", f"({self._scope[name.value]}, {array_size})")
+                    self.push("zero_out", array_address, array_size)
 
             case AssignStatement(lhs, rhs):
                 self.for_assignment(lhs, rhs)
@@ -212,11 +213,11 @@ class MM:
         assert(isinstance(lhs.type_, ArrayType) and isinstance(rhs.type_, ArrayType))
         assert(lhs.type_.size == rhs.type_.size)
 
-        mem_size = lhs.type_.size
+        mem_size = MM.get_type_size(lhs.type_)
         lhs_address = self.store_elem_address(lhs)
         rhs_address = self.store_elem_address(rhs)
 
-        self.push("copy_array", f"({lhs_address}, {rhs_address}, {mem_size})")
+        self.push("copy_array", lhs_address, rhs_address, mem_size)
         
 
 
@@ -302,7 +303,6 @@ class MM:
                     self.push("load", address, result = target)
 
                 case RefExpression(argument):
-                    print("munching a ref WHAT")
                     target = self.store_elem_address(argument)
 
                 case AllocExpression(alloctype, size):
@@ -353,7 +353,7 @@ class MM:
                 self.push("const", elem_size, result = elem_size_reg)
                 self.push("mul", address_shift, elem_size_reg, result = total_shift)
                 self.push("copy", base_address, result = target)
-                self.push("add", target, address_shift, result = target)
+                self.push("add", target, total_shift, result = target)
 
         return target
 

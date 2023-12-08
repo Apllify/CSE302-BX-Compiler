@@ -1,0 +1,6 @@
+def main(){
+    var x = alloc int[10][1] : int[10]*;
+    var y = alloc int[10][20] : int[10]*;
+
+    print(x[0][0]);
+}
