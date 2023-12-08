@@ -176,6 +176,13 @@ class Parser:
                 position = self._position(p),
                 )
 
+    def p_expression_ref(self, p):
+        """expr : AMP assignable"""
+        p[0] = RefExpression(
+            argument = p[2],
+            position = self._position(p)
+        )
+
 
     def p_expression_group(self, p):
         """expr : LPAREN expr RPAREN"""
