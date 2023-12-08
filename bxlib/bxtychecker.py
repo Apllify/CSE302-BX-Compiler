@@ -62,27 +62,27 @@ class TypeChecker:
     I : Type = BasicType.INT
 
     SIGS = {
-        'opposite'                 : ([I   ], I),
-        'bitwise-negation'         : ([B   ], B),
-        'boolean-not'              : ([B   ], B),
-        'addition'                 : ([I, I], I),
-        'subtraction'              : ([I, I], I),
-        'multiplication'           : ([I, I], I),
-        'division'                 : ([I, I], I),
-        'modulus'                  : ([I, I], I),
-        'logical-right-shift'      : ([I, I], I),
-        'logical-left-shift'       : ([I, I], I),
-        'bitwise-and'              : ([I, I], I),
-        'bitwise-or'               : ([I, I], I),
-        'bitwise-xor'              : ([I, I], I),
-        'boolean-and'              : ([B, B], B),
-        'boolean-or'               : ([B, B], B),
-        'cmp-equal'                : ([I, I], B),
-        'cmp-not-equal'            : ([I, I], B),
-        'cmp-lower-than'           : ([I, I], B),
-        'cmp-lower-or-equal-than'  : ([I, I], B),
-        'cmp-greater-than'         : ([I, I], B),
-        'cmp-greater-or-equal-than': ([I, I], B),
+        ('opposite',                  I)    : I,
+        ('bitwise-negation',          B)    : I,
+        ('boolean-not',               B)    : B,
+        ('addition',                  I, I) : I,
+        ('subtraction',               I, I) : I,
+        ('multiplication',            I, I) : I,
+        ('division',                  I, I) : I,
+        ('modulus',                   I, I) : I,
+        ('logical-right-shift',       I, I) : I,
+        ('logical-left-shift',        I, I) : I,
+        ('bitwise-and',               I, I) : I,
+        ('bitwise-or',                I, I) : I,
+        ('bitwise-xor',               I, I) : I, 
+        ('boolean-and',               B, B) : B,
+        ('boolean-or',                B, B) : B,
+        ('cmp-equal',                 I, I) : B,
+        ('cmp-not-equal',             I, I) : B,
+        ('cmp-lower-than',            I, I) : B,
+        ('cmp-lower-or-equal-than',   I, I) : B,
+        ('cmp-greater-than',          I, I) : B,      
+        ('cmp-greater-or-equal-than', I, I) : B,
     }
 
     def __init__(self, scope : Scope, procs : ProcSigMap, reporter : Reporter):
@@ -94,6 +94,34 @@ class TypeChecker:
 
     def report(self, msg: str, position: Opt[Range] = None):
         self.reporter(msg, position = position)
+
+    @staticmethod
+    def op_signature(opname : str, arg_types: list[Type]) -> Type | None:
+        """
+        Returns the type signature of an operator application, given the
+        types of its arguments
+        """
+        opkey = tuple([opname] + arg_types)
+        all_hashable = all( isinstance(t, tp.Hashable) for t in  arg_types )
+
+        if all_hashable and opkey in TypeChecker.SIGS:
+            return TypeChecker.SIGS[opkey]
+        else:  
+            #any special cases for operator signatures
+            match opkey :
+                case ("cmp-equal", t1, t2) | ("cmp-not-equal", t1, t2):
+                    is_pointer_comp = (
+                                       (isinstance(t1, PointerType) and t1 == t2) or 
+
+                                       (any(isinstance(t, PointerType) for t in arg_types)
+                                        and BasicType.NULL in arg_types) or 
+
+                                        (arg_types == [BasicType.NULL, BasicType.NULL])
+                                      )
+                        
+                    if is_pointer_comp: 
+                        return BasicType.BOOL
+
 
     @cl.contextmanager
     def in_loop(self):
@@ -156,10 +184,23 @@ class TypeChecker:
                     type_ = BasicType.NULL
 
             case OpAppExpression(opname, arguments):
-                opsig = self.SIGS[opname]
-                for atype, argument in zip(opsig[0], arguments):
-                    self.for_expression(argument, etype = atype)
-                type_ = opsig[1]
+                
+                arg_types = []
+                for arg in arguments: 
+                    self.for_expression(arg)
+                    arg_types.append(arg.type_)
+
+                opsig = TypeChecker.op_signature(opname, arg_types)
+
+                if not opsig :
+                    arg_types_s = map(str, arg_types)
+                    self.report(
+                        f"""No variant of '{opname}' with type signature: 
+                            {', '.join(arg_types_s)} -> <Output>""",
+                        expr.position
+                    )
+
+                type_ = opsig
 
             case CallExpression(name, arguments):
                 atypes, retty = [], None

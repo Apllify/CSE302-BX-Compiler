@@ -11,9 +11,20 @@ def main(){
     var b = 0 : int[3];
     b = a;
 
+
+    var p1 = &a[0] : int*;
+    var p2 = &a[1] : int*;
+    var p3 = null  : int*;
+
     x[0][0] = 9;
 
     print(x[0][0]);
     print(a[2]);
     print(a[1]);
+
+    print(p1 == p2);
+    print(p1 == p1);
+    print(p1 == null);
+    print(p3 == null);
+    print(null == null);
 }

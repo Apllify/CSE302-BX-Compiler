@@ -171,9 +171,11 @@ class Parser:
 
 
     def p_expression_ref(self, p):
-        """expr : AMP assignable"""
+        """expr : AMP assignable
+                | AMP LPAREN assignable RPAREN"""
+        inside = p[2] if len(p) == 3 else p[3]
         p[0] = RefExpression(
-            argument = p[2],
+            argument = inside,
             position = self._position(p)
         )
 
@@ -245,14 +247,14 @@ class Parser:
                 )
 
     def p_assignable_point(self, p):
-        """assignable : STAR expr"""
+        """assignable : STAR assignable"""
         p[0] = DerefAssignable(
                 argument = p[2],
                 position = self._position(p),
                 )
     
     def p_assignable_array(self, p):
-        """assignable : expr LSQUARE expr RSQUARE"""
+        """assignable : assignable LSQUARE expr RSQUARE"""
         p[0] = ArrayAssignable(
                 argument = p[1],
                 index = p[3],
