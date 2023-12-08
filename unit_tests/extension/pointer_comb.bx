@@ -1,6 +1,6 @@
 def main(){
-    var p = null : int*;
-    p = alloc int[3];
+    var x = alloc int[10][1] : int[10]*;
+    var y = alloc int[10][20] : int[10]*;
 
-    print(p[0]);
+    print(x[0][0]);
 }

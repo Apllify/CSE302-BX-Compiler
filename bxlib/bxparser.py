@@ -168,13 +168,8 @@ class Parser:
             position  = self._position(p),
         )
 
-    def p_expression_alloc(self, p):
-        """expr : ALLOC type LSQUARE expr RSQUARE"""
-        p[0] = AllocExpression(
-                alloctype = p[2],
-                size = p[4],
-                position = self._position(p),
-                )
+
+
 
     def p_expression_ref(self, p):
         """expr : AMP assignable"""
@@ -207,6 +202,27 @@ class Parser:
         """expr : assignable"""
         p[0] = p[1]
 
+
+    def p_expression_alloc(self, p):
+        """expr : ALLOC type""" 
+
+        #parse the alloc argument as a single type, then extract qt from it 
+        assert(isinstance(p[2], ArrayType))
+        p[0] = AllocExpression(
+                alloctype = p[2].target,
+                size = IntExpression(p[2].size),
+                position = self._position(p),
+                )
+
+    def p_expression_alloc_b(self, p):
+        """expr : ALLOC type LSQUARE expr RSQUARE"""
+
+        #important to allow expressions as alloc arg
+        p[0] = AllocExpression(
+            alloctype = p[2],
+            size = p[4],
+            position = self._position(p)
+        )
 
     def p_exprs_comma_1(self, p):
         """exprs_comma_1 : expr
