@@ -99,7 +99,6 @@ class Parser:
             target = p[1]
         )
 
-
     def p_type_array(self, p):
         """type : type LSQUARE NUMBER RSQUARE"""
         p[0] = ArrayType(

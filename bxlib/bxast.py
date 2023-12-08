@@ -26,6 +26,8 @@ class BasicType(Type, enum.Enum):
                 return 'int'
             case self.BOOL:
                 return 'bool'
+            case self.NULL :
+                return 'null' 
 
 @dc.dataclass
 class PointerType(Type):
