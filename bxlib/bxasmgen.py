@@ -236,26 +236,27 @@ class AsmGen_x64_Linux(AsmGen):
             self._emit('movq', self._temp(ret), '%rax')
         self._emit('jmp', self._endlbl)
 
-    def _emit_load(self, tuple_, dest):
-        # if len(tuple_) == 2 : 
-        #     tb_reg, no = tuple_
-        #     self._emit("movq", f"{self._temp(tb_reg)}", '%rax')
-        #     self._emit("movq", f"(%rax)",dest)
-        # elif len(tuple_) == 4 :
-
-        # else:
-        #     raise Exception("Unrecognized load arg format")
-        pass
+    def _emit_load(self, address_temp, dest):
+        self._emit("movq", self._temp(address_temp), '%rax')
+        self._emit("movq", f"(%rax)", self._temp(dest) )
         
+    def _emit_store(self, value_temp, address_temp):
+        self._emit("movq", self._temp(value_temp), "%rax")
+        self._emit("movq", self._temp(address_temp), "%rbx")
+        self._emit("movq", "%rbx", f"(%rax)")
 
-    def _emit_store():
-        pass
+    def _emit_ref(self, refed, dest):
+        #store the address of the referenced temp in dest
+        self._emit("leaq", self._temp(refed), self._temp(dest))
 
-    def _emit_ref():
-        pass
+    def _emit_alloc(self, bcount : str, bsize : int, dest):
+        #use runtime malloc
+        self._emit('xorq', '%rax', '%rax')
+        self._emit("movq", self._temp(bcount), "%rdi")
+        self._emit("movq", f"${bsize}", "%rsi")
+        self._emit("callq", "alloc")
+        self._emit("movq", "%rax", self._temp(dest))
 
-    def _emit_alloc():
-        pass
 
     def _emit_zero_out():
         pass
