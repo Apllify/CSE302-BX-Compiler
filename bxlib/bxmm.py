@@ -6,6 +6,7 @@ from typing import Optional as Opt
 from .bxast   import *
 from .bxscope import Scope
 from .bxtac   import *
+from .bxtysizer import TypeSize
 
 # ====================================================================
 # Maximal munch
@@ -30,30 +31,6 @@ class MM:
     def mm(prgm: Program):
         mm = MM(); mm.for_program(prgm)
         return mm._tac
-
-    @staticmethod 
-    def get_type_size(type_ : Type): 
-        """
-        Compute and return the size of a type (IN BYTES)
-        """
-        if type_ in (BasicType.INT, BasicType.BOOL, BasicType.NULL):
-            return 8
-
-        size = 0
-
-        match type_ : 
-            case PointerType(target):
-                size = 8
-
-            case ArrayType(target, size):
-                size = MM.get_type_size(target) * size
-
-            case _ : 
-                assert(False)
-                
-
-        return size
-
 
     @classmethod
     def fresh_temporary(cls):
@@ -129,7 +106,7 @@ class MM:
 
                 #store temp size for the asm phase
                 assert(self._proc is not None)
-                self._proc.add_temp_size(new_temp, MM.get_type_size(type))
+                self._proc.add_temp_size(new_temp, TypeSize.size(type))
 
                 if not isinstance(type, ArrayType):
                     temp = self.for_expression(init)
@@ -137,7 +114,7 @@ class MM:
                 else:  
                     array_address = self.fresh_temporary()
                     self.push("ref", self._scope[name.value], result= array_address)
-                    array_size = type.size * MM.get_type_size(type.target)
+                    array_size = type.size * TypeSize.size(type.target)
                     self.push("zero_out", array_address, array_size)
 
             case AssignStatement(lhs, rhs):
@@ -203,7 +180,7 @@ class MM:
         assert(isinstance(lhs.type_, ArrayType) and isinstance(rhs.type_, ArrayType))
         assert(lhs.type_.size == rhs.type_.size)
 
-        mem_size = MM.get_type_size(lhs.type_)
+        mem_size = TypeSize.size(lhs.type_)
         lhs_address = self.store_elem_address(lhs)
         rhs_address = self.store_elem_address(rhs)
 
@@ -298,7 +275,7 @@ class MM:
                 case AllocExpression(alloctype, size):
                     target = self.fresh_temporary()
                     bcount_reg = self.for_expression(size)    # munch the number of blocks and store
-                    self.push("alloc", bcount_reg, MM.get_type_size(alloctype), result = target)
+                    self.push("alloc", bcount_reg, TypeSize.size(alloctype), result = target)
                     
                 case _:
                     assert(False)
@@ -328,7 +305,7 @@ class MM:
                 assert(isinstance(sub_arg.type_, ArrayType) or isinstance(sub_arg.type_, PointerType) )
 
                 shift_reg = self.for_expression(index)
-                elem_size = MM.get_type_size(sub_arg.type_.target)
+                elem_size = TypeSize.size(sub_arg.type_.target)
 
                 #iterate over type of sub_arg
                 match sub_arg.type_:

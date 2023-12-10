@@ -2,22 +2,25 @@
 import contextlib as cl
 import typing as tp
 
-from .bxerrors import Reporter
-from .bxast    import *
-from .bxscope  import Scope
+from .bxerrors  import Reporter
+from .bxast     import *
+from .bxscope   import Scope
+from .bxtysizer import TypeSize
 
 # ====================================================================
 SigType    = tuple[tuple[Type], Opt[Type]]
 ProcSigMap = dict[str, SigType]
+TypedefMap = dict[str, Type]
 
 # --------------------------------------------------------------------
 class PreTyper:
     def __init__(self, reporter : Reporter):
         self.reporter = reporter
 
-    def pretype(self, prgm : Program) -> tuple[Scope, ProcSigMap]:
+    def pretype(self, prgm : Program) -> tuple[Scope, ProcSigMap, TypedefMap]:
         scope = Scope()
         procs = dict()
+        typedefs = dict()
 
         for topdecl in prgm:
             match topdecl:
@@ -44,6 +47,17 @@ class PreTyper:
 
                     scope.push(name.value, type_)
 
+                case TypedefDecl(alias, original_type):
+                    if alias.value in typedefs : 
+                        self.reporter(
+                            f"duplicated type definition: {alias.value}",
+                            position = alias.position
+                        ) 
+                        continue
+                
+                    typedefs[alias] = original_type
+
+
                 case _:
                     assert(False)
 
@@ -54,7 +68,7 @@ class PreTyper:
                 '"main" should not take any argument and should not return any value'
             )
 
-        return scope, procs
+        return scope, procs, typedefs
 
 # --------------------------------------------------------------------
 class TypeChecker:
@@ -85,9 +99,10 @@ class TypeChecker:
         ('cmp-greater-or-equal-than', I, I) : B,
     }
 
-    def __init__(self, scope : Scope, procs : ProcSigMap, reporter : Reporter):
+    def __init__(self, scope : Scope, procs : ProcSigMap, typedefs : TypedefMap, reporter : Reporter):
         self.scope    = scope
         self.procs    = procs
+        self.typedefs = typedefs
         self.loops    = 0
         self.proc     = None
         self.reporter = reporter
@@ -96,11 +111,17 @@ class TypeChecker:
         self.reporter(msg, position = position)
 
     @staticmethod
+    def is_type_simple(type_ : Type):
+        return isinstance(type_, BasicType) or isinstance(type_, PointerType)
+
+    @staticmethod
     def op_signature(opname : str, arg_types: list[Type]) -> Type | None:
         """
         Returns the type signature of an operator application, given the
         types of its arguments
         """
+
+        #try to check if this type sign is simple in form
         opkey = tuple([opname] + arg_types)
         all_hashable = all( isinstance(t, tp.Hashable) for t in  arg_types )
 
@@ -163,6 +184,61 @@ class TypeChecker:
             self.report(f'integer literal out of range: {value}')
             return False
         return True
+
+    def resolve_type(self, type_ : Type) -> Type : 
+        """
+        Processes type info to make it into a format appropriate for the 
+        muncher (only affects structs and type stand-ins)
+        """
+
+        #untouched types
+        if isinstance(type_, BasicType): 
+            return type_
+
+        #special cases
+        match type_ : 
+            case PointerType(target):
+                return PointerType(
+                    target = self.resolve_type(target)
+                )
+            
+            case ArrayType(target, size):
+                return ArrayType(
+                    target = self.resolve_type(target),
+                    size = size
+                )
+
+            case StructType(attributes, attr_lookup):
+                if attr_lookup is not None : 
+                    return type_
+
+                #compute the offsets and types for munch phase
+                offset = 0
+                type_.attr_lookup = dict()
+
+                for (attr_name, attr_t) in attributes : 
+                    real_t = self.resolve_type(attr_t)
+                    type_.attr_lookup[attr_name] = (offset, real_t)
+                    offset += TypeSize.size(real_t)
+
+                return type_
+
+
+            case StandinType(type_name):
+                real_type = self.typedefs.get(type_name.value)
+
+                if real_type is None : 
+                    self.report(
+                        f"Undefined type alias : {type_name.value}",
+                        position = type_name.position
+                    )
+                    assert(False)
+
+                return real_type
+
+            case _ : 
+                assert(False)
+        
 
     def for_expression(self, expr : Expression, etype : tp.Optional[Type] = None):
         type_ = None
@@ -239,7 +315,7 @@ class TypeChecker:
             case AllocExpression(alloctype, size):
                 self.for_expression(size, BasicType.INT)
 
-                type_ = PointerType(alloctype)
+                type_ = PointerType(self.resolve_type(alloctype))
 
             case RefExpression(argument):
                 self.for_expression(argument)
@@ -330,11 +406,13 @@ class TypeChecker:
     def for_statement(self, stmt : Statement):
         match stmt:
             case VarDeclStatement(name, init, type_):
-                if self.check_local_free(name):
-                    self.scope.push(name.value, type_)
+                real_type = self.resolve_type(type_)
 
-                if isinstance(type_, ArrayType) : 
-                    #arrays only initialized with the 0 constant
+                if self.check_local_free(name):
+                    self.scope.push(name.value, real_type)
+
+                #check zero initialization for arrays and struct
+                if isinstance(real_type, ArrayType) or isinstance(real_type, StructType): 
                     self.for_expression(init)
                     
                     match init : 
@@ -342,7 +420,7 @@ class TypeChecker:
                             pass
                         case _ : 
                             self.report(
-                                'arrays can only be initialized with literal "0"',
+                                'arrays and structs can only be initialized with literal "0"',
                                 position = stmt.position,
                             )                
                 else: 
@@ -407,12 +485,28 @@ class TypeChecker:
         match decl:
             case ProcDecl(name, arguments, retty, body):
                 with self.in_proc(decl):
+
+                    #can't have aggregate type arguments
                     for vname, vtype_ in arguments:
+                        if not TypeChecker.is_type_simple(vtype_) : 
+                            self.report(
+                                "functions may only have non-aggregate type arguments",
+                                position = decl.position
+                            )
+
                         if self.check_local_free(vname):
-                            self.scope.push(vname.value, vtype_)
+                            self.scope.push(vname.value, self.resolve_type(vtype_))
+
                     self.for_statement(body)
 
+                    #check existence and soundness of return value
                     if retty is not None:
+                        if not TypeChecker.is_type_simple(retty) : 
+                            self.report(
+                                "functions may only have non-aggregate return types",
+                                position = decl.position
+                            )
+
                         if not self.has_return(body):
                             self.report(
                                 'this function is missing a return statement',
@@ -465,6 +559,6 @@ class TypeChecker:
 # --------------------------------------------------------------------
 def check(prgm : Program, reporter : Reporter):
     with reporter.checkpoint() as checkpoint:
-        scope, procs = PreTyper(reporter).pretype(prgm)
-        TypeChecker(scope, procs, reporter).check(prgm)
+        scope, procs, typedefs = PreTyper(reporter).pretype(prgm)
+        TypeChecker(scope, procs, typedefs, reporter).check(prgm)
         return bool(checkpoint)

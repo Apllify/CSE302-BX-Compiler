@@ -8,6 +8,26 @@ from typing import Optional as Opt
 # Parse tree / Abstract Syntax Tree
 
 # --------------------------------------------------------------------
+@dc.dataclass
+class Range:
+    start: tuple[int, int]
+    end: tuple[int, int]
+
+    @staticmethod
+    def of_position(line: int, column: int):
+        return Range((line, column), (line, column+1))
+
+# --------------------------------------------------------------------
+@dc.dataclass
+class AST:
+    position: Opt[Range] = dc.field(kw_only = True, default = None)
+
+# --------------------------------------------------------------------
+@dc.dataclass
+class Name(AST):
+    value: str
+
+# --------------------------------------------------------------------
 class Type():
     pass
 
@@ -50,34 +70,15 @@ class StructType(Type):
     attributes : list[tuple[str, Type]]
 
     #set during type check
-    attr_offsets : Opt[dict[str, int]] = dc.field(kw_only = True, default = None)
-    size : Opt[int] = dc.field(kw_only = True, default = None)
+    attr_lookup : Opt[dict[str,   tuple[int, Type]    ]] = dc.field(kw_only = True, default = None)
 
 
 @dc.dataclass 
-class TypeStandin(Type):
-    type_name : str
+class StandinType(Type):
+    type_name : Name
 
 
-# --------------------------------------------------------------------
-@dc.dataclass
-class Range:
-    start: tuple[int, int]
-    end: tuple[int, int]
 
-    @staticmethod
-    def of_position(line: int, column: int):
-        return Range((line, column), (line, column+1))
-
-# --------------------------------------------------------------------
-@dc.dataclass
-class AST:
-    position: Opt[Range] = dc.field(kw_only = True, default = None)
-
-# --------------------------------------------------------------------
-@dc.dataclass
-class Name(AST):
-    value: str
 
 # --------------------------------------------------------------------
 @dc.dataclass
@@ -244,8 +245,8 @@ class ProcDecl(TopDecl):
 
 #--------------------------------------------------------------------
 @dc.dataclass
-class TypeAbbrevDecl(TopDecl):
-    alias : str
+class TypedefDecl(TopDecl):
+    alias : Name
     original_type : Type
 
 # --------------------------------------------------------------------

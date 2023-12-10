@@ -125,8 +125,8 @@ class Parser:
             p[0] = [p[2]] + p[3]
 
     def p_type_standin(self, p):
-        """type : IDENT"""
-        p[0] = TypeStandin(
+        """type : name"""
+        p[0] = StandinType(
             type_name = p[1]
         )
 
@@ -433,9 +433,9 @@ class Parser:
             position = self._position(p),
         )
 
-    def p_typeabbrevdecl(self, p):
-        """typeabbrevdecl : TYPE IDENT EQ type SEMICOLON"""
-        p[0] = TypeAbbrevDecl(
+    def p_typedefdecl(self, p):
+        """typedefdecl : TYPE name EQ type SEMICOLON"""
+        p[0] = TypedefDecl(
             alias = p[2],
             original_type = p[4],
             position = self._position(p),
@@ -444,7 +444,7 @@ class Parser:
     def p_topdecl(self, p):
         """topdecl : procdecl
                    | globvardecl
-                   | typeabbrevdecl"""
+                   | typedefdecl"""
         p[0] = p[1]
 
     def p_program(self, p):

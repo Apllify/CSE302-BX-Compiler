@@ -47,6 +47,7 @@ class Lexer:
         'SEMICOLON',
         'COMMA'    ,
         'PERIOD'   ,
+        'RARROW',
 
         'AMP'      ,
         'AMPAMP'   ,
@@ -81,6 +82,7 @@ class Lexer:
     t_SEMICOLON = re.escape(';')
     t_COMMA     = re.escape(',')
     t_PERIOD    = re.escape('.')
+    t_RARROW    = re.escape('->')
 
     t_AMP       = re.escape('&')
     t_AMPAMP    = re.escape('&&')
