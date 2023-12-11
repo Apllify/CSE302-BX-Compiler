@@ -192,7 +192,7 @@ class TypeChecker:
         """
 
         #untouched types
-        if isinstance(type_, BasicType): 
+        if isinstance(type_, BasicType) or not type_: 
             return type_
 
         #special cases
@@ -503,6 +503,11 @@ class TypeChecker:
                 self.for_statement(stmt)
 
     def for_topdecl(self, decl : TopDecl):
+        """
+        Type check the top level declarations,
+        and resolve the type signatures of functions 
+        and global vars
+        """
         match decl:
             case ProcDecl(name, arguments, retty, body):
                 with self.in_proc(decl):
@@ -517,12 +522,15 @@ class TypeChecker:
 
                         if self.check_local_free(vname):
                             self.scope.push(vname.value, self.resolve_type(vtype_))
+                    
+                    real_ret = self.resolve_type(retty)
+                    self.proc.rettype = real_ret
 
                     self.for_statement(body)
 
                     #check existence and soundness of return value
-                    if retty is not None:
-                        if not TypeChecker.is_type_simple(retty) : 
+                    if real_ret is not None:
+                        if not TypeChecker.is_type_simple(real_ret) : 
                             self.report(
                                 "functions may only have non-aggregate return types",
                                 position = decl.position
@@ -535,7 +543,11 @@ class TypeChecker:
                             )
 
             case GlobVarDecl(name, init, type_):
-                self.for_expression(init, etype = type_)
+                real_type = self.resolve_type(type_)
+                if real_type != type_ : 
+                    self.scope[name.value] = real_type
+
+                self.for_expression(init, etype = real_type)
 
                 if not self.check_constant(init):
                     self.report(
