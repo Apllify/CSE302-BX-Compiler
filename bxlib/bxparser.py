@@ -293,6 +293,14 @@ class Parser:
             position = self._position(p)
         )
 
+    def p_assignable_point_attr(self, p):
+        """assignable : assignable RARROW IDENT"""
+        p[0] = AttrPointerAssignable(
+            argument = p[1],
+            attribute = p[3],
+            position = self._position(p)
+        )
+
     def p_stmt_vardecl(self, p):
         """stmt : VAR name EQ expr COLON type SEMICOLON"""
         p[0] = VarDeclStatement(

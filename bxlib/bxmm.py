@@ -272,7 +272,7 @@ class MM:
 
                     self.push("load", address, result = target)
 
-                case ArrayAssignable(_, _) | AttributeAssignable(_, _) :
+                case ArrayAssignable() | AttributeAssignable() | AttrPointerAssignable():
                     address = self.store_elem_address(expr)
                     target = self.fresh_temporary()
                     self.push("load", address, result = target)
@@ -338,6 +338,16 @@ class MM:
 
                 target = self.store_elem_address(argument)
                 offset = argument.type_.attr_lookup[attribute][0]
+
+                offset_reg = self.fresh_temporary()
+                self.push("const", offset, result = offset_reg)
+                self.push("add", target, offset_reg, result = target)
+
+            case AttrPointerAssignable(argument, attribute):
+                assert(isinstance(argument.type_, PointerType)
+                       and isinstance(argument.type_.target, StructType))
+                target = self.for_expression(argument)
+                offset = argument.type_.target.attr_lookup[attribute][0]
 
                 offset_reg = self.fresh_temporary()
                 self.push("const", offset, result = offset_reg)

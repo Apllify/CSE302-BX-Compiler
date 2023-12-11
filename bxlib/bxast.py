@@ -149,9 +149,17 @@ class ArrayAssignable(Assignable):
     argument : Assignable
     index : Expression
 
+
+
 # --------------------------------------------------------------------
 @dc.dataclass
 class AttributeAssignable(Assignable):
+    argument : Assignable
+    attribute : str
+    
+# --------------------------------------------------------------------
+@dc.dataclass
+class AttrPointerAssignable(Assignable):
     argument : Assignable
     attribute : str
 

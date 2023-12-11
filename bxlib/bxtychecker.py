@@ -190,8 +190,6 @@ class TypeChecker:
         Processes type info to make it into a format appropriate for the 
         muncher (only directly affects structs and type stand-ins)
         """
-
-
         #untouched types
         if isinstance(type_, BasicType) or not type_: 
             return type_
@@ -226,7 +224,7 @@ class TypeChecker:
 
 
             case StandinType(type_name):
-                real_type = self.typedefs.get(type_name.value)
+                real_type = self.resolve_type(self.typedefs.get(type_name.value))
 
                 if real_type is None : 
                     self.report(
@@ -338,7 +336,6 @@ class TypeChecker:
                 
 
             case _:
-                print(expr)
                 assert(False)
 
         if type_ is not None:
@@ -408,6 +405,26 @@ class TypeChecker:
                     return
 
                 attr_entry = argument.type_.attr_lookup.get(attribute)
+
+                if attr_entry is None : 
+                    self.report(
+                        'unrecognized struct field name',
+                        position = argument.position
+                    )
+                else :
+                    type_ = attr_entry[1]
+
+            case AttrPointerAssignable(argument, attribute):
+                self.for_expression(argument)
+                if not (isinstance(argument.type_, PointerType) and
+                        isinstance(argument.type_.target, StructType)):
+                    self.report(
+                        'arrow operator is only valid for struct pointers',
+                        position = argument.position
+                    )
+                    return
+
+                attr_entry = argument.type_.target.attr_lookup.get(attribute)
 
                 if attr_entry is None : 
                     self.report(
@@ -496,7 +513,6 @@ class TypeChecker:
                         )
 
             case _:
-                print(stmt)
                 assert(False)
 
     def for_block(self, block : Block):
