@@ -108,14 +108,16 @@ class MM:
                 assert(self._proc is not None)
                 self._proc.add_temp_size(new_temp, TypeSize.size(type))
 
-                if not isinstance(type, ArrayType):
-                    temp = self.for_expression(init)
-                    self.push('copy', temp, result = self._scope[name.value])
-                else:  
+                #special munch case for aggregate types               
+                if isinstance(type, ArrayType) or isinstance(type, StructType):
                     array_address = self.fresh_temporary()
                     self.push("ref", self._scope[name.value], result= array_address)
                     array_size = type.size * TypeSize.size(type.target)
                     self.push("zero_out", array_address, array_size)
+                    return
+
+                temp = self.for_expression(init)
+                self.push('copy', temp, result = self._scope[name.value])
 
             case AssignStatement(lhs, rhs):
                 self.for_assignment(lhs, rhs)
@@ -264,7 +266,7 @@ class MM:
 
                     self.push("load", address, result = target)
 
-                case ArrayAssignable(_, _):
+                case ArrayAssignable(_, _) | AttributeAssignable(_, _) :
                     address = self.store_elem_address(expr)
                     target = self.fresh_temporary()
                     self.push("load", address, result = target)
@@ -323,6 +325,16 @@ class MM:
                 self.push("add",  address_reg, shift_reg, result = address_reg)
 
                 target = address_reg
+
+            case AttributeAssignable(argument, attribute):
+                assert(isinstance(elem.type_, StructType))
+
+                target = self.store_elem_address(argument)
+                offset = elem.type_.attr_lookup[attribute][0]
+
+                offset_reg = self.fresh_temporary()
+                self.push("const", offset, result = offset_reg)
+                self.push("add", target, offset_reg, result = target)
 
         return target
 
