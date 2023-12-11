@@ -498,6 +498,7 @@ class TypeChecker:
                 self.for_expression(init, etype = BasicType.INT)
 
             case ReturnStatement(e):
+                
                 if e is None:
                     if self.proc.rettype is not None:
                         self.report(
@@ -542,7 +543,10 @@ class TypeChecker:
                             self.scope.push(vname.value, self.resolve_type(vtype_))
                     
                     real_ret = self.resolve_type(retty)
-                    self.proc.rettype = real_ret
+                    if real_ret != retty : 
+                        #replace the type everywhere with the resolved one
+                        self.proc.rettype = real_ret
+                        self.procs[name.value] = (self.procs[name.value][0], real_ret)
 
                     self.for_statement(body)
 

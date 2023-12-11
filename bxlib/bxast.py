@@ -72,6 +72,9 @@ class StructType(Type):
     #set during type check
     attr_lookup : Opt[dict[str,   tuple[int, Type]    ]] = dc.field(kw_only = True, default = None)
 
+    def __str__(self):
+        return f"struct"
+
 
 @dc.dataclass 
 class StandinType(Type):
@@ -156,7 +159,7 @@ class ArrayAssignable(Assignable):
 class AttributeAssignable(Assignable):
     argument : Assignable
     attribute : str
-    
+
 # --------------------------------------------------------------------
 @dc.dataclass
 class AttrPointerAssignable(Assignable):
