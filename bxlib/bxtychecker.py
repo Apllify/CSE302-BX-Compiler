@@ -54,8 +54,8 @@ class PreTyper:
                             position = alias.position
                         ) 
                         continue
-                
-                    typedefs[alias] = original_type
+
+                    typedefs[alias.value] = original_type
 
 
                 case _:
@@ -191,6 +191,7 @@ class TypeChecker:
         muncher (only directly affects structs and type stand-ins)
         """
 
+
         #untouched types
         if isinstance(type_, BasicType) or not type_: 
             return type_
@@ -208,7 +209,7 @@ class TypeChecker:
                     size = size
                 )
 
-            case StructType(attributes, attr_lookup):
+            case StructType(attributes, attr_lookup = attr_lookup):
                 if attr_lookup is not None : 
                     return type_
 
@@ -428,6 +429,7 @@ class TypeChecker:
         match stmt:
             case VarDeclStatement(name, init, type_):
                 real_type = self.resolve_type(type_)
+                stmt.type_ = real_type
 
                 if self.check_local_free(name):
                     self.scope.push(name.value, real_type)

@@ -1,12 +1,20 @@
 def main(){
     var x = alloc int[10][1] : int[10]*;
     var y = alloc int[10][20] : int[10]*;
+    var bpointer = null : bool*;
 
     var a = 0 : int[3];
+    var d = 0 : bool[5];
 
     a[0] = 6;
     a[1] = 89897;
     a[2] = 1615;
+
+    var e = true : bool;
+    bpointer = &e;
+
+    d[3] = true;
+    d[4] = false;
 
     var b = 0 : int[3];
     b = a;
@@ -27,4 +35,8 @@ def main(){
     print(p1 == null);
     print(p3 == null);
     print(null == null);
+
+    print(*bpointer);
+    print(d[3]);
+    print(d[4]);
 }

@@ -109,7 +109,7 @@ class Parser:
     def p_type_struct(self, p):
         """type : STRUCT LBRACE s_field s_field_rest RBRACE"""
         p[0] = StructType(
-            attributes = [p[2]] + p[3],
+            attributes = [p[3]] + p[4],
             )
 
     def p_s_field(self, p):
@@ -120,7 +120,7 @@ class Parser:
         """s_field_rest :
                         | COMMA s_field s_field_rest"""
         if len(p) == 1:
-            p[0] = [()]
+            p[0] = []
         else:
             p[0] = [p[2]] + p[3]
 

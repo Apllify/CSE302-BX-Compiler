@@ -109,11 +109,17 @@ class MM:
                 self._proc.add_temp_size(new_temp, TypeSize.size(type))
 
                 #special munch case for aggregate types               
-                if isinstance(type, ArrayType) or isinstance(type, StructType):
+                if isinstance(type, ArrayType):
                     array_address = self.fresh_temporary()
                     self.push("ref", self._scope[name.value], result= array_address)
                     array_size = type.size * TypeSize.size(type.target)
                     self.push("zero_out", array_address, array_size)
+                    return
+                elif isinstance(type, StructType):
+                    struct_address = self.fresh_temporary()
+                    self.push("ref", self._scope[name.value], result= struct_address)
+                    struct_size = TypeSize.size(type)
+                    self.push("zero_out", struct_address, struct_size)
                     return
 
                 temp = self.for_expression(init)
@@ -327,10 +333,11 @@ class MM:
                 target = address_reg
 
             case AttributeAssignable(argument, attribute):
-                assert(isinstance(elem.type_, StructType))
+                assert(isinstance(argument.type_, StructType) 
+                       and argument.type_.attr_lookup is not None)
 
                 target = self.store_elem_address(argument)
-                offset = elem.type_.attr_lookup[attribute][0]
+                offset = argument.type_.attr_lookup[attribute][0]
 
                 offset_reg = self.fresh_temporary()
                 self.push("const", offset, result = offset_reg)
@@ -397,6 +404,13 @@ class MM:
 
             case CallExpression(_):
                 temp = self.for_expression(expr, force = True)
+                self.push('jz', temp, flabel)
+                self.push('jmp', tlabel)
+
+            case Assignable():
+                address = self.store_elem_address(expr)
+                temp = self.fresh_temporary()
+                self.push("load", address, result = temp)
                 self.push('jz', temp, flabel)
                 self.push('jmp', tlabel)
 

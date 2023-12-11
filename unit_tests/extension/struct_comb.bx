@@ -1,0 +1,10 @@
+type al1 = int;
+type al2 = bool; 
+
+def main(){
+    var a = 1 : al1;
+    var b = true : al2;
+
+    print(a);
+    print(b);
+}
