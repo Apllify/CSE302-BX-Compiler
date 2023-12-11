@@ -113,7 +113,7 @@ class Parser:
             )
 
     def p_s_field(self, p):
-        """s_field : IDENT COLON type"""
+        """s_field : name COLON type"""
         p[0] = (p[1], p[3])
 
     def p_s_field_rest(self, p):

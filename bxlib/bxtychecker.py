@@ -217,7 +217,7 @@ class TypeChecker:
 
                 for (attr_name, attr_t) in attributes : 
                     real_t = self.resolve_type(attr_t)
-                    type_.attr_lookup[attr_name] = (offset, real_t)
+                    type_.attr_lookup[attr_name.value] = (offset, real_t)
                     offset += TypeSize.size(real_t)
 
                 return type_

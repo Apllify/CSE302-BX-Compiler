@@ -67,7 +67,7 @@ class ArrayType(Type):
 @dc.dataclass
 class StructType(Type):
     #set in parser
-    attributes : list[tuple[str, Type]]
+    attributes : list[tuple[Name, Type]]
 
     #set during type check
     attr_lookup : Opt[dict[str,   tuple[int, Type]    ]] = dc.field(kw_only = True, default = None)
