@@ -188,7 +188,7 @@ class TypeChecker:
     def resolve_type(self, type_ : Type) -> Type : 
         """
         Processes type info to make it into a format appropriate for the 
-        muncher (only affects structs and type stand-ins)
+        muncher (only directly affects structs and type stand-ins)
         """
 
         #untouched types
@@ -313,9 +313,11 @@ class TypeChecker:
                 type_ = BasicType.VOID
 
             case AllocExpression(alloctype, size):
+                real_alloctype = self.resolve_type(alloctype)
+                expr.alloctype = real_alloctype
                 self.for_expression(size, BasicType.INT)
 
-                type_ = PointerType(self.resolve_type(alloctype))
+                type_ = PointerType(real_alloctype)
 
             case RefExpression(argument):
                 self.for_expression(argument)
@@ -395,6 +397,25 @@ class TypeChecker:
 
                 type_ = argument.type_.target
 
+            case AttributeAssignable(argument, attribute):
+                self.for_expression(argument)
+                if not isinstance(argument.type_, StructType):
+                    self.report(
+                        'illegal field access on non-struct type',
+                        position = argument.position
+                    )
+                    return
+
+                attr_entry = argument.type_.attr_lookup.get(attribute)
+
+                if attr_entry is None : 
+                    self.report(
+                        'unrecognized struct field name',
+                        position = argument.position
+                    )
+                else :
+                    type_ = attr_entry[1]
+
             case _ : 
                 self.report(
                     'unsupported assignable',
@@ -424,7 +445,7 @@ class TypeChecker:
                                 position = stmt.position,
                             )                
                 else: 
-                    self.for_expression(init, etype = type_)
+                    self.for_expression(init, etype = real_type)
 
             case AssignStatement(lhs, rhs):
                 self.for_assignable(lhs)

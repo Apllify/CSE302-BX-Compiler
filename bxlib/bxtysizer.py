@@ -19,8 +19,12 @@ class TypeSize :
             case ArrayType(target, size):
                 size = TypeSize.size(target) * size
 
+            case StructType(attributes):
+                for (a_name, a_type) in attributes : 
+                    size += TypeSize.size(a_type)
+
             case _ : 
-                assert(False)
+                raise ValueError("Input type must be resolved")
                 
 
         return size

@@ -290,6 +290,7 @@ class Parser:
         p[0] = AttributeAssignable(
             argument = p[1],
             attribute = p[3],
+            position = self._position(p)
         )
 
     def p_stmt_vardecl(self, p):
