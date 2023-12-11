@@ -1,6 +1,6 @@
 type al1 = int;
 type al2 = bool; 
-type sss = struct {first : int, second : sss} ;
+type sss = struct {first : int, second : int} ;
 
 def main(){
     var a = 1 : al1;
