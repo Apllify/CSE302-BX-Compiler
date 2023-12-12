@@ -325,12 +325,14 @@ class MM:
 
                 #bit ugly but does the job
                 bsize_reg = self.fresh_temporary()
+                target = self.fresh_temporary()
+        
                 self.push("const", elem_size, bsize_reg)
 
-                self.push("mul", shift_reg, bsize_reg, result = shift_reg)
-                self.push("add",  address_reg, shift_reg, result = address_reg)
+                self.push("mul", shift_reg, bsize_reg, result = target)
+                self.push("add",  address_reg, target, result = target)
 
-                target = address_reg
+        
 
             case AttributeAssignable(argument, attribute):
                 assert(isinstance(argument.type_, StructType) 
@@ -346,12 +348,12 @@ class MM:
             case AttrPointerAssignable(argument, attribute):
                 assert(isinstance(argument.type_, PointerType)
                        and isinstance(argument.type_.target, StructType))
-                target = self.for_expression(argument)
+                struct_address = self.for_expression(argument)
                 offset = argument.type_.target.attr_lookup[attribute][0]
-
+                target = self.fresh_temporary()
                 offset_reg = self.fresh_temporary()
                 self.push("const", offset, result = offset_reg)
-                self.push("add", target, offset_reg, result = target)
+                self.push("add", struct_address, offset_reg, result = target)
 
         return target
 
