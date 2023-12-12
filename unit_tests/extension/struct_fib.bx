@@ -18,9 +18,8 @@ def make_fibtree(n : int) : fibtree* {
 }
 
 def main() {
-    var ret = alloc fibtree[1] : fibtree*;
-    ret->prev[0] = alloc fibtree[1];
+    var ret = make_fibtree(10) : fibtree*;
 
-    print(ret->prev[0][0]->val);
+    print(ret->prev[0]->val);
 
 }
