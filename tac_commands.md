@@ -18,8 +18,11 @@
 # Newly added commands : 
 ## Any name preceded by a % is a temporary, anything else is a constant : 
 - %t1 = load %tb
+- %t1 = load (%tb, offset)  
 - store %t1, %tb 
-=> Commands suggested by TD
+- store %t1, (%tb, offset)  
+=> Commands suggested by TD  
+
 - %t1 = ref %t2   
 => Removed by asm phase
 - %t1 = alloc %block_count, block_size

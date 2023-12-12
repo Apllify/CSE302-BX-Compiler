@@ -27,6 +27,17 @@ class Scope:
                 return s[name]
         assert(False)
 
+    def __setitem__(self, name: str, newdata : tp.Any):
+        if name not in self : 
+            return self.push(name, newdata)
+
+        #set value in most recent scope 
+        for i in range(len(self.vars) - 1, -1, -1):
+            if name in self.vars[i]:
+                self.vars[i][name] = newdata
+                break
+
+
     def __contains__(self, name: str):
         return any(name in s for s in self.vars)
 

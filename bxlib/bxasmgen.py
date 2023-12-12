@@ -230,15 +230,31 @@ class AsmGen_x64_Linux(AsmGen):
             self._emit('movq', self._temp(ret), '%rax')
         self._emit('jmp', self._endlbl)
 
-    def _emit_load(self, address_temp, dest):
-        self._emit("movq", self._temp(address_temp), '%rax')
-        self._emit("movq", f"(%rax)", "%rbx")
+    def _emit_load(self, address : str | tuple[str, int], dest):
+        #argument overloads
+        if isinstance(address, tuple):
+            address_reg = address[0]
+            offset = address[1]
+        else: 
+            address_reg = address
+            offset = 0
+
+        self._emit("movq", self._temp(address_reg), '%rax')
+        self._emit("movq", f"{offset}(%rax)", "%rbx")
         self._emit("movq", "%rbx", self._temp(dest))
         
-    def _emit_store(self, value_temp, address_temp):
+    def _emit_store(self, value_temp, address : str | tuple[str, int]):
+        #argument overloads
+        if isinstance(address, tuple):
+            address_reg = address[0]
+            offset = address[1]
+        else: 
+            address_reg = address
+            offset = 0
+
         self._emit("movq", self._temp(value_temp), "%rax")
-        self._emit("movq", self._temp(address_temp), "%rbx")
-        self._emit("movq", "%rax", f"(%rbx)")
+        self._emit("movq", self._temp(address_reg), "%rbx")
+        self._emit("movq", "%rax", f"{offset}(%rbx)")
 
     def _emit_ref(self, refed, dest):
         #store the address of the referenced temp in dest

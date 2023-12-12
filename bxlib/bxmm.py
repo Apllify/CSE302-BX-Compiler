@@ -6,6 +6,7 @@ from typing import Optional as Opt
 from .bxast   import *
 from .bxscope import Scope
 from .bxtac   import *
+from .bxtysizer import TypeSize
 
 # ====================================================================
 # Maximal munch
@@ -30,30 +31,6 @@ class MM:
     def mm(prgm: Program):
         mm = MM(); mm.for_program(prgm)
         return mm._tac
-
-    @staticmethod 
-    def get_type_size(type_ : Type): 
-        """
-        Compute and return the size of a type (IN BYTES)
-        """
-        if type_ in (BasicType.INT, BasicType.BOOL, BasicType.NULL):
-            return 8
-
-        size = 0
-
-        match type_ : 
-            case PointerType(target):
-                size = 8
-
-            case ArrayType(target, size):
-                size = MM.get_type_size(target) * size
-
-            case _ : 
-                assert(False)
-                
-
-        return size
-
 
     @classmethod
     def fresh_temporary(cls):
@@ -129,16 +106,24 @@ class MM:
 
                 #store temp size for the asm phase
                 assert(self._proc is not None)
-                self._proc.add_temp_size(new_temp, MM.get_type_size(type))
+                self._proc.add_temp_size(new_temp, TypeSize.size(type))
 
-                if not isinstance(type, ArrayType):
-                    temp = self.for_expression(init)
-                    self.push('copy', temp, result = self._scope[name.value])
-                else:  
+                #special munch case for aggregate types               
+                if isinstance(type, ArrayType):
                     array_address = self.fresh_temporary()
                     self.push("ref", self._scope[name.value], result= array_address)
-                    array_size = type.size * MM.get_type_size(type.target)
+                    array_size = type.size * TypeSize.size(type.target)
                     self.push("zero_out", array_address, array_size)
+                    return
+                elif isinstance(type, StructType):
+                    struct_address = self.fresh_temporary()
+                    self.push("ref", self._scope[name.value], result= struct_address)
+                    struct_size = TypeSize.size(type)
+                    self.push("zero_out", struct_address, struct_size)
+                    return
+
+                temp = self.for_expression(init)
+                self.push('copy', temp, result = self._scope[name.value])
 
             case AssignStatement(lhs, rhs):
                 self.for_assignment(lhs, rhs)
@@ -203,7 +188,7 @@ class MM:
         assert(isinstance(lhs.type_, ArrayType) and isinstance(rhs.type_, ArrayType))
         assert(lhs.type_.size == rhs.type_.size)
 
-        mem_size = MM.get_type_size(lhs.type_)
+        mem_size = TypeSize.size(lhs.type_)
         lhs_address = self.store_elem_address(lhs)
         rhs_address = self.store_elem_address(rhs)
 
@@ -287,7 +272,7 @@ class MM:
 
                     self.push("load", address, result = target)
 
-                case ArrayAssignable(_, _):
+                case ArrayAssignable() | AttributeAssignable() | AttrPointerAssignable():
                     address = self.store_elem_address(expr)
                     target = self.fresh_temporary()
                     self.push("load", address, result = target)
@@ -298,7 +283,7 @@ class MM:
                 case AllocExpression(alloctype, size):
                     target = self.fresh_temporary()
                     bcount_reg = self.for_expression(size)    # munch the number of blocks and store
-                    self.push("alloc", bcount_reg, MM.get_type_size(alloctype), result = target)
+                    self.push("alloc", bcount_reg, TypeSize.size(alloctype), result = target)
                     
                 case _:
                     assert(False)
@@ -328,7 +313,7 @@ class MM:
                 assert(isinstance(sub_arg.type_, ArrayType) or isinstance(sub_arg.type_, PointerType) )
 
                 shift_reg = self.for_expression(index)
-                elem_size = MM.get_type_size(sub_arg.type_.target)
+                elem_size = TypeSize.size(sub_arg.type_.target)
 
                 #iterate over type of sub_arg
                 match sub_arg.type_:
@@ -340,12 +325,35 @@ class MM:
 
                 #bit ugly but does the job
                 bsize_reg = self.fresh_temporary()
+                target = self.fresh_temporary()
+        
                 self.push("const", elem_size, bsize_reg)
 
-                self.push("mul", shift_reg, bsize_reg, result = shift_reg)
-                self.push("add",  address_reg, shift_reg, result = address_reg)
+                self.push("mul", shift_reg, bsize_reg, result = target)
+                self.push("add",  address_reg, target, result = target)
 
-                target = address_reg
+        
+
+            case AttributeAssignable(argument, attribute):
+                assert(isinstance(argument.type_, StructType) 
+                       and argument.type_.attr_lookup is not None)
+
+                target = self.store_elem_address(argument)
+                offset = argument.type_.attr_lookup[attribute][0]
+
+                offset_reg = self.fresh_temporary()
+                self.push("const", offset, result = offset_reg)
+                self.push("add", target, offset_reg, result = target)
+
+            case AttrPointerAssignable(argument, attribute):
+                assert(isinstance(argument.type_, PointerType)
+                       and isinstance(argument.type_.target, StructType))
+                struct_address = self.for_expression(argument)
+                offset = argument.type_.target.attr_lookup[attribute][0]
+                target = self.fresh_temporary()
+                offset_reg = self.fresh_temporary()
+                self.push("const", offset, result = offset_reg)
+                self.push("add", struct_address, offset_reg, result = target)
 
         return target
 
@@ -408,6 +416,13 @@ class MM:
 
             case CallExpression(_):
                 temp = self.for_expression(expr, force = True)
+                self.push('jz', temp, flabel)
+                self.push('jmp', tlabel)
+
+            case Assignable():
+                address = self.store_elem_address(expr)
+                temp = self.fresh_temporary()
+                self.push("load", address, result = temp)
                 self.push('jz', temp, flabel)
                 self.push('jmp', tlabel)
 

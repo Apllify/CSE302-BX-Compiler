@@ -8,6 +8,26 @@ from typing import Optional as Opt
 # Parse tree / Abstract Syntax Tree
 
 # --------------------------------------------------------------------
+@dc.dataclass
+class Range:
+    start: tuple[int, int]
+    end: tuple[int, int]
+
+    @staticmethod
+    def of_position(line: int, column: int):
+        return Range((line, column), (line, column+1))
+
+# --------------------------------------------------------------------
+@dc.dataclass
+class AST:
+    position: Opt[Range] = dc.field(kw_only = True, default = None)
+
+# --------------------------------------------------------------------
+@dc.dataclass
+class Name(AST):
+    value: str
+
+# --------------------------------------------------------------------
 class Type():
     pass
 
@@ -44,25 +64,24 @@ class ArrayType(Type):
     def __str__(self):
         return f"{self.target}[{self.size}]"
 
-# --------------------------------------------------------------------
 @dc.dataclass
-class Range:
-    start: tuple[int, int]
-    end: tuple[int, int]
+class StructType(Type):
+    #set in parser
+    attributes : list[tuple[Name, Type]]
 
-    @staticmethod
-    def of_position(line: int, column: int):
-        return Range((line, column), (line, column+1))
+    #set during type check
+    attr_lookup : Opt[dict[str,   tuple[int, Type]    ]] = dc.field(kw_only = True, default = None)
 
-# --------------------------------------------------------------------
-@dc.dataclass
-class AST:
-    position: Opt[Range] = dc.field(kw_only = True, default = None)
+    def __str__(self):
+        return f"struct"
 
-# --------------------------------------------------------------------
-@dc.dataclass
-class Name(AST):
-    value: str
+
+@dc.dataclass 
+class StandinType(Type):
+    type_name : Name
+
+
+
 
 # --------------------------------------------------------------------
 @dc.dataclass
@@ -132,6 +151,20 @@ class DerefAssignable(Assignable):
 class ArrayAssignable(Assignable):
     argument : Assignable
     index : Expression
+
+
+
+# --------------------------------------------------------------------
+@dc.dataclass
+class AttributeAssignable(Assignable):
+    argument : Assignable
+    attribute : str
+
+# --------------------------------------------------------------------
+@dc.dataclass
+class AttrPointerAssignable(Assignable):
+    argument : Assignable
+    attribute : str
 
 
 # --------------------------------------------------------------------
@@ -220,6 +253,12 @@ class ProcDecl(TopDecl):
     arguments: list[tuple[Name, Type]]
     rettype: Opt[Type]
     body: Statement
+
+#--------------------------------------------------------------------
+@dc.dataclass
+class TypedefDecl(TopDecl):
+    alias : Name
+    original_type : Type
 
 # --------------------------------------------------------------------
 Block   = list[Statement]

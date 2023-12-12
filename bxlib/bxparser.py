@@ -106,6 +106,30 @@ class Parser:
             size = p[3]
         )
 
+    def p_type_struct(self, p):
+        """type : STRUCT LBRACE s_field s_field_rest RBRACE"""
+        p[0] = StructType(
+            attributes = [p[3]] + p[4],
+            )
+
+    def p_s_field(self, p):
+        """s_field : name COLON type"""
+        p[0] = (p[1], p[3])
+
+    def p_s_field_rest(self, p):
+        """s_field_rest :
+                        | COMMA s_field s_field_rest"""
+        if len(p) == 1:
+            p[0] = []
+        else:
+            p[0] = [p[2]] + p[3]
+
+    def p_type_standin(self, p):
+        """type : name"""
+        p[0] = StandinType(
+            type_name = p[1]
+        )
+
 
     def p_expression_bool(self, p):
         """expr : TRUE
@@ -260,7 +284,22 @@ class Parser:
                 index = p[3],
                 position = self._position(p),
                 )
-        
+
+    def p_assignable_attribute(self, p):
+        """assignable : assignable PERIOD IDENT"""
+        p[0] = AttributeAssignable(
+            argument = p[1],
+            attribute = p[3],
+            position = self._position(p)
+        )
+
+    def p_assignable_point_attr(self, p):
+        """assignable : assignable RARROW IDENT"""
+        p[0] = AttrPointerAssignable(
+            argument = p[1],
+            attribute = p[3],
+            position = self._position(p)
+        )
 
     def p_stmt_vardecl(self, p):
         """stmt : VAR name EQ expr COLON type SEMICOLON"""
@@ -403,9 +442,18 @@ class Parser:
             position = self._position(p),
         )
 
+    def p_typedefdecl(self, p):
+        """typedefdecl : TYPE name EQ type SEMICOLON"""
+        p[0] = TypedefDecl(
+            alias = p[2],
+            original_type = p[4],
+            position = self._position(p),
+        )
+
     def p_topdecl(self, p):
         """topdecl : procdecl
-                   | globvardecl"""
+                   | globvardecl
+                   | typedefdecl"""
         p[0] = p[1]
 
     def p_program(self, p):

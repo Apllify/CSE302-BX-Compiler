@@ -1,0 +1,8 @@
+def main(){
+    var a1 = 0 : struct {name : int, age : int, height : int, evil : bool};
+
+    print(a1.name);
+    print(a1.age);
+    print(a1.height);
+    print(a1.evil);
+}

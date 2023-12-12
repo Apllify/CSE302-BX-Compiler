@@ -24,7 +24,9 @@ class Lexer:
             'null'    ,
             'print'   ,
             'return'  ,
+            'struct'  ,
             'true'    ,
+            'type'    ,
             'var'     ,
             'while'   ,
         )
@@ -44,6 +46,8 @@ class Lexer:
         'COLON'    ,
         'SEMICOLON',
         'COMMA'    ,
+        'PERIOD'   ,
+        'RARROW',
 
         'AMP'      ,
         'AMPAMP'   ,
@@ -77,6 +81,8 @@ class Lexer:
     t_COLON     = re.escape(':')
     t_SEMICOLON = re.escape(';')
     t_COMMA     = re.escape(',')
+    t_PERIOD    = re.escape('.')
+    t_RARROW    = re.escape('->')
 
     t_AMP       = re.escape('&')
     t_AMPAMP    = re.escape('&&')
