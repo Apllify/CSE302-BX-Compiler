@@ -3,7 +3,9 @@ type fibtree = struct {
     prev : fibtree*[2]
 };
 
-def make_fibtree(n : int) : fibtree* {
+type integer = int; 
+
+def make_fibtree(n : integer) : fibtree* {
     var ret = alloc fibtree[1] : fibtree*;
     if (n == 0) {
         ret->val = 0; // actually redundant

@@ -261,6 +261,8 @@ class TypeChecker:
     def for_expression(self, expr : Expression, etype : tp.Optional[Type] = None):
         type_ = None
 
+        etype = self.resolve_type(etype)
+
         match expr:
             case BoolExpression(_):
                 type_ = BasicType.BOOL
@@ -553,6 +555,7 @@ class TypeChecker:
 
                     #can't have aggregate type arguments
                     for vname, vtype_ in arguments:
+                        vtype_ = self.resolve_type(vtype_)
                         if not TypeChecker.is_type_simple(vtype_) : 
                             self.report(
                                 "functions may only have non-aggregate type arguments",
