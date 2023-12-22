@@ -1,0 +1,14 @@
+type a = struct {
+    field : b
+};
+
+type b = struct {
+    field : a
+};
+
+
+def main(){
+    var x = 0 : a;
+
+    print(888);
+}

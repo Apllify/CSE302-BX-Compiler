@@ -185,7 +185,7 @@ class TypeChecker:
             return False
         return True
 
-    def resolve_type(self, type_ : Type) -> Type : 
+    def resolve_type(self, type_ : Type, seen_names : None | set[str] = None) -> Type : 
         """
         Processes type info to make it into a format appropriate for the 
         muncher (only directly affects structs and type stand-ins)
@@ -203,7 +203,7 @@ class TypeChecker:
             
             case ArrayType(target, size):
                 return ArrayType(
-                    target = self.resolve_type(target),
+                    target = self.resolve_type(target, seen_names),
                     size = size
                 )
 
@@ -216,7 +216,7 @@ class TypeChecker:
                 type_.attr_lookup = dict()
 
                 for (attr_name, attr_t) in attributes : 
-                    real_t = self.resolve_type(attr_t)
+                    real_t = self.resolve_type(attr_t, seen_names)
                     type_.attr_lookup[attr_name.value] = (offset, real_t)
                     offset += TypeSize.size(real_t)
 
@@ -224,7 +224,22 @@ class TypeChecker:
 
 
             case StandinType(type_name):
-                real_type = self.resolve_type(self.typedefs.get(type_name.value))
+
+                #check we're not recursing infinitely
+                if seen_names is not None and type_name.value in seen_names : 
+                    self.report(
+                        "Invalid recursive type definition",
+                        type_name.position
+                    )
+                    assert(False)
+
+                if seen_names is None : 
+                    seen_names = set()
+                seen_names.add(type_name.value)
+
+
+                #resolve reference while keeping track of seen names
+                real_type = self.resolve_type(self.typedefs.get(type_name.value), seen_names)
 
                 if real_type is None : 
                     self.report(
@@ -232,6 +247,10 @@ class TypeChecker:
                         position = type_name.position
                     )
                     assert(False)
+
+
+                #save result
+                self.typedefs[type_name.value] = real_type
 
                 return real_type
 
@@ -450,6 +469,7 @@ class TypeChecker:
 
                 if self.check_local_free(name):
                     self.scope.push(name.value, real_type)
+
 
                 #check zero initialization for arrays and struct
                 if isinstance(real_type, ArrayType) or isinstance(real_type, StructType): 

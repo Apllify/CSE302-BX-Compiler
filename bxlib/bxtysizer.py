@@ -20,7 +20,7 @@ class TypeSize :
                 size = TypeSize.size(target) * size
 
             case StructType(attributes):
-                for (a_name, a_type) in attributes : 
+                for (a_name, (a_offset, a_type)) in type_.attr_lookup.items() : 
                     size += TypeSize.size(a_type)
 
             case _ : 

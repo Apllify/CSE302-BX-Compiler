@@ -1,0 +1,16 @@
+type fibtree = struct {
+    ama : int,
+    val : int[2]
+};
+
+
+def main() {
+    var fib = 0 : fibtree;
+    var ret = &fib : fibtree*;
+    ret->val[0] = 4;
+    print(ret->val[0]);
+    
+    fib.val[0] = 5;
+    print(fib.val[0]);
+    print(ret->val[0]);
+}
